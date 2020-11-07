@@ -1,0 +1,11 @@
+﻿{
+  "Group": "Misc",
+  "FriendlyName": "Task Management",
+  "SystemName": "Misc.TaskManagement",
+  "Version": "1.0",
+  "SupportedVersions": [ "4.40" ],
+  "Author": "Kamil Kapliński, Mateusz Surynowicz, Mateusz Czarniecki, Aleksander Bołtryk",
+  "DisplayOrder": 1,
+  "FileName": "Nop.Plugin.Misc.TaskManagement.dll",
+  "Description": "This plugin introduces task managamenet system into administration panel."
+}
