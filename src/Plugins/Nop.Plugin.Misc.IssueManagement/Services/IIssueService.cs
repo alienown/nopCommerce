@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Nop.Plugin.Misc.TaskManagement.Domain;
+using Nop.Plugin.Misc.IssueManagement.Domain;
 
-namespace Nop.Plugin.Misc.TaskManagement.Services
+namespace Nop.Plugin.Misc.IssueManagement.Services
 {
     public interface IIssueService
     {

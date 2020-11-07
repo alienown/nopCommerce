@@ -1,0 +1,11 @@
+﻿{
+  "Group": "Misc",
+  "FriendlyName": "Issue Management",
+  "SystemName": "Misc.IssueManagement",
+  "Version": "1.0",
+  "SupportedVersions": [ "4.40" ],
+  "Author": "Kamil Kapliński, Mateusz Surynowicz, Mateusz Czarniecki, Aleksander Bołtryk",
+  "DisplayOrder": 1,
+  "FileName": "Nop.Plugin.Misc.IssueManagement.dll",
+  "Description": "This plugin introduces issue managamenet system into administration panel."
+}

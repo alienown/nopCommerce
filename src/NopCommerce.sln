@@ -65,7 +65,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nop.Plugin.Widgets.Facebook
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nop.Plugin.MultiFactorAuth.GoogleAuthenticator", "Plugins\Nop.Plugin.MultiFactorAuth.GoogleAuthenticator\Nop.Plugin.MultiFactorAuth.GoogleAuthenticator.csproj", "{F9F61CE0-6FC0-43A5-930A-A27099F4DE44}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nop.Plugin.Misc.TaskManagement", "Plugins\Nop.Plugin.Misc.TaskManagement\Nop.Plugin.Misc.TaskManagement.csproj", "{13AAB51A-361F-4E0F-AB6D-6A3EABEC87FD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nop.Plugin.Misc.IssueManagement", "Plugins\Nop.Plugin.Misc.IssueManagement\Nop.Plugin.Misc.IssueManagement.csproj", "{13AAB51A-361F-4E0F-AB6D-6A3EABEC87FD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

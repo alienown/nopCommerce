@@ -1,11 +1,11 @@
 ﻿using FluentMigrator;
 using Nop.Data.Migrations;
-using Nop.Plugin.Misc.TaskManagement.Domain;
+using Nop.Plugin.Misc.IssueManagement.Domain;
 
-namespace Nop.Plugin.Pickup.PickupInStore.Data
+namespace Nop.Plugin.Misc.IssueManagement.Data
 {
     [SkipMigrationOnUpdate]
-    [NopMigration("2020/11/07 16:30:00", "Misc.TaskManagement base schema")]
+    [NopMigration("2020/11/07 16:30:00", "Misc.IssueManagement base schema")]
     public class SchemaMigration : AutoReversingMigration
     {
         protected IMigrationManager _migrationManager;

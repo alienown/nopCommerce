@@ -3,9 +3,9 @@ using FluentMigrator.Builders.Create.Table;
 using Nop.Core.Domain.Customers;
 using Nop.Data.Extensions;
 using Nop.Data.Mapping.Builders;
-using Nop.Plugin.Misc.TaskManagement.Domain;
+using Nop.Plugin.Misc.IssueManagement.Domain;
 
-namespace Nop.Plugin.Misc.TaskManagement.Data
+namespace Nop.Plugin.Misc.IssueManagement.Data
 {
     public class IssueAssignmentBuilder : NopEntityBuilder<IssueAssignment>
     {

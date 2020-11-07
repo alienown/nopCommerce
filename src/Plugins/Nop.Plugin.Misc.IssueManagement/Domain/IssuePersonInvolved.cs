@@ -1,7 +1,7 @@
 ﻿using System;
 using Nop.Core;
 
-namespace Nop.Plugin.Misc.TaskManagement.Domain
+namespace Nop.Plugin.Misc.IssueManagement.Domain
 {
     public class IssuePersonInvolved : BaseEntity
     {
