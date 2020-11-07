@@ -17,11 +17,11 @@ namespace Nop.Plugin.Pickup.PickupInStore.Data
 
         public override void Up()
         {
-            _migrationManager.BuildTable<Task>(Create);
-            _migrationManager.BuildTable<TaskPersonInvolved>(Create);
-            _migrationManager.BuildTable<TaskAssignment>(Create);
-            _migrationManager.BuildTable<TaskComment>(Create);
-            _migrationManager.BuildTable<TaskHistory>(Create);
+            _migrationManager.BuildTable<Issue>(Create);
+            _migrationManager.BuildTable<IssuePersonInvolved>(Create);
+            _migrationManager.BuildTable<IssueAssignment>(Create);
+            _migrationManager.BuildTable<IssueComment>(Create);
+            _migrationManager.BuildTable<IssueHistory>(Create);
         }
     }
 }

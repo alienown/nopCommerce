@@ -4,7 +4,7 @@ using Nop.Core.Domain.Common;
 
 namespace Nop.Plugin.Misc.TaskManagement.Domain
 {
-    public class Task : BaseEntity, ISoftDeletedEntity
+    public class Issue : BaseEntity, ISoftDeletedEntity
     {
         public string Name { get; set; }
 
@@ -12,9 +12,9 @@ namespace Nop.Plugin.Misc.TaskManagement.Domain
 
         public DateTime? Deadline { get; set; }
 
-        public TaskPriority Priority { get; set; }
+        public IssuePriority Priority { get; set; }
 
-        public TaskStatus Status { get; set; }
+        public IssueStatus Status { get; set; }
 
         public bool Deleted { get; set; }
 

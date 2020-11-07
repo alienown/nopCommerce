@@ -1,6 +1,6 @@
 ﻿namespace Nop.Plugin.Misc.TaskManagement.Domain
 {
-    public enum TaskChangeType
+    public enum IssueChangeType
     {
         Name = 0,
         Description = 1,

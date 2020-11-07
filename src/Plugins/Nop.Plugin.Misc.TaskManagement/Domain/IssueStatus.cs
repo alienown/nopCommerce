@@ -1,6 +1,6 @@
 ﻿namespace Nop.Plugin.Misc.TaskManagement.Domain
 {
-    public enum TaskStatus
+    public enum IssueStatus
     {
         New = 0,
         InProgress = 1,

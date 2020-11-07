@@ -1,6 +1,6 @@
 ﻿namespace Nop.Plugin.Misc.TaskManagement.Domain
 {
-    public enum TaskPriority
+    public enum IssuePriority
     {
         Low = 0,
         Normal = 1,

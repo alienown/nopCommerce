@@ -4,11 +4,11 @@ using Nop.Core.Domain.Common;
 
 namespace Nop.Plugin.Misc.TaskManagement.Domain
 {
-    public class TaskHistory : BaseEntity
+    public class IssueHistory : BaseEntity
     {
-        public int TaskId { get; set; }
+        public int IssueId { get; set; }
 
-        public TaskChangeType ChangeType { get; set; }
+        public IssueChangeType ChangeType { get; set; }
 
         public string NewValue { get; set; }
 

@@ -4,7 +4,7 @@ using Nop.Core.Domain.Common;
 
 namespace Nop.Plugin.Misc.TaskManagement.Domain
 {
-    public class TaskAssignment : BaseEntity
+    public class IssueAssignment : BaseEntity
     {
         public int? ObjectId { get; set; }
 

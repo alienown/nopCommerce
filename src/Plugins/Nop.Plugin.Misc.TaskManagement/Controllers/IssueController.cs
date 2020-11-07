@@ -6,7 +6,7 @@ using Nop.Web.Framework.Mvc.Filters;
 
 namespace Nop.Plugin.Misc.SendinBlue.Controllers
 {
-    public class TaskController : BasePluginController
+    public class IssueController : BasePluginController
     {
         [AuthorizeAdmin]
         [Area(AreaNames.Admin)]

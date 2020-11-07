@@ -4,9 +4,9 @@ using Nop.Core.Domain.Common;
 
 namespace Nop.Plugin.Misc.TaskManagement.Domain
 {
-    public class TaskComment : BaseEntity
+    public class IssueComment : BaseEntity
     {
-        public int TaskId { get; set; }
+        public int IssueId { get; set; }
 
         public string Content { get; set; }
 
