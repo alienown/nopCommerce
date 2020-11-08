@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using FluentMigrator.Builders.Create.Table;
 using Nop.Core.Domain.Customers;
+using Nop.Core.Domain.Vendors;
 using Nop.Data.Extensions;
 using Nop.Data.Mapping.Builders;
 using Nop.Plugin.Misc.IssueManagement.Domain;
@@ -18,7 +19,8 @@ namespace Nop.Plugin.Misc.IssueManagement.Data
                 .WithColumn(nameof(Issue.Priority)).AsByte()
                 .WithColumn(nameof(Issue.Status)).AsByte()
                 .WithColumn(nameof(Issue.Deleted)).AsBinary()
-                .WithColumn(nameof(Issue.CreatedBy)).AsInt32().ForeignKey<Customer>(onDelete: Rule.None)
+                .WithColumn(nameof(Issue.CreatedByCustomerId)).AsInt32().Nullable().ForeignKey<Customer>(onDelete: Rule.None)
+                .WithColumn(nameof(Issue.CreatedByVendorId)).AsInt32().Nullable().ForeignKey<Vendor>(onDelete: Rule.None)
                 .WithColumn(nameof(Issue.CreatedAt)).AsDateTime2()
                 .WithColumn(nameof(Issue.LastModified)).AsDateTime2();
         }

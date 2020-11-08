@@ -1,0 +1,48 @@
+﻿@using Nop.Plugin.Misc.IssueManagement.Models
+
+@model AddIssueModel
+
+@{
+    Layout = "_AdminLayout";
+}
+
+@{
+    const string hideBasicInfoBlockAttributeName = "Plugins.Misc.IssueManagement.Issue.Add.BasicInfoPanel";
+    var hideBasicInfoPanel = genericAttributeService.GetAttribute<bool>(workContext.CurrentCustomer, hideBasicInfoBlockAttributeName, defaultValue: true);
+}
+
+<form asp-controller="Issue" asp-action="Add" method="post">
+    <div class="content-header clearfix">
+        <h1 class="pull-left">
+            @T("Plugins.Misc.IssueManagement.Issue.Add.AddNewIssue")
+            <small>
+                <i class="fa fa-arrow-circle-left"></i>
+                <a asp-action="List">@T("Plugins.Misc.IssueManagement.Issue.Add.ToIssueList")</a>
+            </small>
+        </h1>
+        <div class="pull-right">
+            <button type="submit" name="save" class="btn bg-blue">
+                <i class="fa fa-floppy-o"></i>
+                @T("Admin.Common.Save")
+            </button>
+            <button type="submit" name="save-continue" class="btn bg-blue">
+                <i class="fa fa-floppy-o"></i>
+                @T("Admin.Common.SaveContinue")
+            </button>
+        </div>
+    </div>
+    <div class="content">
+        <div class="form-horizontal">
+            <nop-panels id="issue-panels">
+                <nop-panel asp-name="issue-basic-info"
+                           asp-icon="fa fa-info"
+                           asp-title="@T("Plugins.Misc.IssueManagement.Issue.Add.BasicInfoPanel.Title")"
+                           asp-hide-block-attribute-name="@hideBasicInfoBlockAttributeName"
+                           asp-hide="@hideBasicInfoPanel"
+                           asp-advanced="false">
+                    @await Html.PartialAsync("~/Plugins/Misc.IssueManagement/Views/Add/_BasicInfo.cshtml", Model)
+                </nop-panel>
+            </nop-panels>
+        </div>
+    </div>
+</form>

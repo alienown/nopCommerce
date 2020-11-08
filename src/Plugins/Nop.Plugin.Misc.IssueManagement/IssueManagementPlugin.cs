@@ -17,8 +17,8 @@ namespace Nop.Plugin.Misc.IssueManagement
 
         public IssueManagementPlugin(IWebHelper webHelper, ILocalizationService localizationService)
         {
-            this._webHelper = webHelper;
-            this._localizationService = localizationService;
+            _webHelper = webHelper;
+            _localizationService = localizationService;
         }
 
         public override string GetConfigurationPageUrl()
@@ -30,10 +30,29 @@ namespace Nop.Plugin.Misc.IssueManagement
         {
             _localizationService.AddLocaleResource(new Dictionary<string, string>
             {
-                ["Plugins.Misc.IssueManagement.Issue"] = "Issue",
-                ["Plugins.Misc.IssueManagement.IssueManagement"] = "Issue management",
-                ["Plugins.Misc.IssueManagement.NewIssue"] = "New issue",
-                ["Plugins.Misc.IssueManagement.AllIssues"] = "All issues",
+                ["Plugins.Misc.IssueManagement.Menu.IssueManagement"] = "Issue management",
+                ["Plugins.Misc.IssueManagement.Menu.NewIssue"] = "New issue",
+                ["Plugins.Misc.IssueManagement.Menu.AllIssues"] = "All issues",
+                ["Plugins.Misc.IssueManagement.Issue.Add.AddNewIssue"] = "Add new issue",
+                ["Plugins.Misc.IssueManagement.Issue.Add.ToIssueList"] = "to issue list",
+                ["Plugins.Misc.IssueManagement.Issue.Add.BasicInfoPanel.Title"] = "Basic info",
+                ["Plugins.Misc.IssueManagement.Issue.Add.BasicInfoPanel.Name"] = "Name",
+                ["Plugins.Misc.IssueManagement.Issue.Add.BasicInfoPanel.Description"] = "Description",
+                ["Plugins.Misc.IssueManagement.Issue.Add.BasicInfoPanel.Deadline"] = "Deadline",
+                ["Plugins.Misc.IssueManagement.Issue.Add.BasicInfoPanel.Priority"] = "Priority",
+                ["Plugins.Misc.IssueManagement.Issue.Add.BasicInfoPanel.Status"] = "Status",
+                ["Plugins.Misc.IssueManagement.Issue.Add.BasicInfoPanel.NameNotEmptyValidationMessage"] = "Name is required",
+                ["Plugins.Misc.IssueManagement.Issue.Add.BasicInfoPanel.DescriptionNotEmptyValidationMessage"] = "Description is required",
+                ["Plugins.Misc.IssueManagement.Issue.Add.BasicInfoPanel.PriorityNotEmptyValidationMessage"] = "Priority is required",
+                ["Plugins.Misc.IssueManagement.Issue.Add.BasicInfoPanel.StatusNotEmptyValidationMessage"] = "Status is required",
+                ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssuePriority.Low"] = "Low",
+                ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssuePriority.Normal"] = "Normal",
+                ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssuePriority.Important"] = "Important",
+                ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssuePriority.Urgent"] = "Urgent",
+                ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssuePriority.Critical"] = "Critical",
+                ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueStatus.New"] = "New",
+                ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueStatus.InProgress"] = "In progress",
+                ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueStatus.Closed"] = "Closed",
             });
 
             base.Install();
@@ -42,6 +61,7 @@ namespace Nop.Plugin.Misc.IssueManagement
         public override void Uninstall()
         {
             _localizationService.DeleteLocaleResources("Plugins.Misc.IssueManagement");
+            _localizationService.DeleteLocaleResources("Enums.Nop.Plugin.Misc.IssueManagement");
 
             base.Uninstall();
         }
@@ -51,7 +71,7 @@ namespace Nop.Plugin.Misc.IssueManagement
             var issueManagementRootMenuItem = new SiteMapNode()
             {
                 SystemName = "Issue management",
-                Title = _localizationService.GetResource("Plugins.Misc.IssueManagement.IssueManagement"),
+                Title = _localizationService.GetResource("Plugins.Misc.IssueManagement.Menu.IssueManagement"),
                 IconClass = "fa-check-square",
                 Visible = true,
                 RouteValues = new RouteValueDictionary() { { "area", "Admin" } },
@@ -60,7 +80,7 @@ namespace Nop.Plugin.Misc.IssueManagement
             var allIssuesMenuItem = new SiteMapNode()
             {
                 SystemName = "All issues",
-                Title = _localizationService.GetResource("Plugins.Misc.IssueManagement.AllIssues"),
+                Title = _localizationService.GetResource("Plugins.Misc.IssueManagement.Menu.AllIssues"),
                 IconClass = "fa-list",
                 ControllerName = "Issue",
                 ActionName = "List",
@@ -71,10 +91,10 @@ namespace Nop.Plugin.Misc.IssueManagement
             var newIssueMenuItem = new SiteMapNode()
             {
                 SystemName = "New issue",
-                Title = _localizationService.GetResource("Plugins.Misc.IssueManagement.NewIssue"),
+                Title = _localizationService.GetResource("Plugins.Misc.IssueManagement.Menu.NewIssue"),
                 IconClass = "fa-plus",
                 ControllerName = "Issue",
-                ActionName = "New",
+                ActionName = "Add",
                 Visible = true,
                 RouteValues = new RouteValueDictionary() { { "area", "Admin" } },
             };

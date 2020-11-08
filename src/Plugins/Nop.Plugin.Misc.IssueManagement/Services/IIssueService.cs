@@ -8,5 +8,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
     public interface IIssueService
     {
         Issue GetIssue(int id);
+
+        void InsertIssue(Issue issue);
     }
 }
