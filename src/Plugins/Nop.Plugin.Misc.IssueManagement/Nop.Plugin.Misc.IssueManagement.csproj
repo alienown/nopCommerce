@@ -20,6 +20,8 @@
     <None Remove="Views\Configure.cshtml" />
     <None Remove="Views\Index.cshtml" />
     <None Remove="Views\List.cshtml" />
+    <None Remove="Views\List\_Filters.cshtml" />
+    <None Remove="Views\List\_Grid.cshtml" />
     <None Remove="Views\_CreateOrUpdate.cshtml" />
     <None Remove="Views\_ViewImports.cshtml" />
   </ItemGroup>
@@ -30,7 +32,13 @@
     <Content Include="plugin.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Views\List.cshtml">
+    <Content Include="Views\List\_Filters.cshtml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Views\List\_Grid.cshtml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Views\List\List.cshtml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Views\Index.cshtml">
@@ -52,6 +60,9 @@
     <ProjectReference Include="..\..\Presentation\Nop.Web\Nop.Web.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="Content\List\index.css">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="logo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -42,7 +42,15 @@ namespace Nop.Plugin.Misc.IssueManagement.Controllers
         [HttpGet]
         public IActionResult List()
         {
-            return View("~/Plugins/Misc.IssueManagement/Views/List.cshtml");
+            var model = _issueModelFactory.PrepareIssueSearchModel();
+            return View("~/Plugins/Misc.IssueManagement/Views/List/List.cshtml", model);
+        }
+
+        [HttpPost]
+        public IActionResult IssueList(IssueSearchModel searchModel)
+        {
+            var model = _issueModelFactory.PrepareIssueListModel(searchModel);
+            return Json(model);
         }
 
         [HttpGet]
@@ -58,16 +66,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Controllers
             if (ModelState.IsValid)
             {
                 var issue = model.ToEntity<Issue>();
-
-                if (_workContext.CurrentCustomer != null)
-                {
-                    issue.CreatedByCustomerId = _workContext.CurrentCustomer.Id;
-                }
-                else if (_workContext.CurrentVendor != null)
-                {
-                    issue.CreatedByVendorId = _workContext.CurrentVendor.Id;
-                }
-
+                issue.CreatedBy = _workContext.CurrentCustomer.Id;
                 var now = DateTime.UtcNow;
                 issue.CreatedAt = now;
                 issue.LastModified = now;

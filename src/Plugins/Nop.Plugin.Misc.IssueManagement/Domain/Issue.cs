@@ -18,9 +18,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Domain
 
         public bool Deleted { get; set; }
 
-        public int? CreatedByCustomerId { get; set; }
-
-        public int? CreatedByVendorId { get; set; }
+        public int CreatedBy { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

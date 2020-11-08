@@ -7,7 +7,7 @@ using Nop.Plugin.Payments.Manual.Validators;
 
 namespace Nop.Plugin.Misc.IssueManagement.Models
 {
-    public partial class AddIssueModel : BaseNopEntityModel
+    public class AddIssueModel : BaseNopEntityModel
     {
         [NopResourceDisplayName("Plugins.Misc.IssueManagement.Issue.Add.BasicInfoPanel.Name")]
         public string Name { get; set; }

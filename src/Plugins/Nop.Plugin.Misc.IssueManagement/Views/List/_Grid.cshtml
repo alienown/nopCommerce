@@ -1,0 +1,105 @@
+﻿@using Nop.Plugin.Misc.IssueManagement.Models
+@using Nop.Web.Framework.Models.DataTables
+@using Nop.Plugin.Misc.IssueManagement.Domain
+
+@model IssueSearchModel
+
+@{
+    var gridModel = new DataTablesModel
+    {
+        Name = "issues-grid",
+        UrlRead = new DataUrl("IssueList", "Issue", null),
+        SearchButtonId = "search-issues",
+        Length = Model.PageSize,
+        LengthMenu = Model.AvailablePageSizes,
+    };
+
+    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.Name))
+    {
+        Title = T("Plugins.Misc.IssueManagement.Issue.List.Grid.Columns.Name").Text
+    });
+    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.StatusDisplay))
+    {
+        Title = T("Plugins.Misc.IssueManagement.Issue.List.Grid.Columns.Status").Text,
+        Width = "100",
+        Render = new RenderCustom("renderIssueStatus"),
+    });
+    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.PriorityDisplay))
+    {
+        Title = T("Plugins.Misc.IssueManagement.Issue.List.Grid.Columns.Priority").Text,
+        Width = "100",
+        Render = new RenderCustom("renderIssuePriority"),
+    });
+    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.Deadline))
+    {
+        Title = T("Plugins.Misc.IssueManagement.Issue.List.Grid.Columns.Deadline").Text,
+        Width = "170",
+        Render = new RenderDate(),
+    });
+    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.CreatedBy))
+    {
+        Title = T("Plugins.Misc.IssueManagement.Issue.List.Grid.Columns.CreatedBy").Text
+    });
+    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.CreatedAt))
+    {
+        Title = T("Plugins.Misc.IssueManagement.Issue.List.Grid.Columns.CreatedAt").Text,
+        Width = "170",
+        Render = new RenderDate(),
+    });
+    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.LastModified))
+    {
+        Title = T("Plugins.Misc.IssueManagement.Issue.List.Grid.Columns.LastModified").Text,
+        Width = "170",
+        Render = new RenderDate(),
+    });
+}
+
+@await Html.PartialAsync("Table", gridModel)
+
+<script>
+    function renderIssuePriority(data, type, row, meta) {
+        var color;
+        switch (row.Priority) {
+            case @((byte)IssuePriority.Low):
+                color = 'gray';
+                break;
+            case @((byte)IssuePriority.Normal):
+                color = 'blue';
+                break;
+            case @((byte)IssuePriority.Important):
+                color = 'yellow';
+                break;
+            case @((byte)IssuePriority.Urgent):
+                color = 'lightCoral';
+                break;
+            case @((byte)IssuePriority.Critical):
+                color = 'red';
+                break;
+            default:
+                color = '';
+                break;
+        }
+
+        return '<span class="grid-report-item ' + color + '">' + data + '</span >';
+    }
+
+   function renderIssueStatus(data, type, row, meta) {
+       var color;
+       switch (row.Status) {
+            case @((byte)IssueStatus.Closed):
+                color = 'green';
+                break;
+            case @((byte)IssueStatus.InProgress):
+                color = 'blue';
+                break;
+            case @((byte)IssueStatus.New):
+                color = 'gray';
+                break;
+            default:
+                color = '';
+                break;
+        }
+
+        return '<span class="grid-report-item ' + color + '">' + data + '</span >';
+    }
+</script>

@@ -18,9 +18,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Data
                 .WithColumn(nameof(Issue.Deadline)).AsDateTime2().Nullable()
                 .WithColumn(nameof(Issue.Priority)).AsByte()
                 .WithColumn(nameof(Issue.Status)).AsByte()
-                .WithColumn(nameof(Issue.Deleted)).AsBinary()
-                .WithColumn(nameof(Issue.CreatedByCustomerId)).AsInt32().Nullable().ForeignKey<Customer>(onDelete: Rule.None)
-                .WithColumn(nameof(Issue.CreatedByVendorId)).AsInt32().Nullable().ForeignKey<Vendor>(onDelete: Rule.None)
+                .WithColumn(nameof(Issue.CreatedBy)).AsInt32().Nullable().ForeignKey<Customer>(onDelete: Rule.None)
                 .WithColumn(nameof(Issue.CreatedAt)).AsDateTime2()
                 .WithColumn(nameof(Issue.LastModified)).AsDateTime2();
         }
