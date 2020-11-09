@@ -1,0 +1,74 @@
+﻿@using Nop.Plugin.Misc.IssueManagement.Models
+
+@model EditIssueModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = T("Plugins.Misc.IssueManagement.Edit.Title").Text;
+    Html.SetActiveMenuItemSystemName("New issue");
+}
+
+@{
+    const string hideBasicInfoBlockAttributeName = "Plugins.Misc.IssueManagement.Edit.BasicInfoPanel";
+    var hideBasicInfoPanel = genericAttributeService.GetAttribute<bool>(workContext.CurrentCustomer, hideBasicInfoBlockAttributeName, defaultValue: true);
+
+    const string hidePersonsInvolvedBlockAttributeName = "Plugins.Misc.IssueManagement.Edit.PersonsInvolvedPanel";
+    var hidePersonsInvolvedPanel = genericAttributeService.GetAttribute<bool>(workContext.CurrentCustomer, hidePersonsInvolvedBlockAttributeName, defaultValue: true);
+
+    const string hideAssignmentsBlockAttributeName = "Plugins.Misc.IssueManagement.Edit.AssignmentsPanel";
+    var hideAssignmentsPanel = genericAttributeService.GetAttribute<bool>(workContext.CurrentCustomer, hideAssignmentsBlockAttributeName, defaultValue: true);
+}
+
+<form asp-controller="Issue" asp-action="Edit" method="post">
+    <input asp-for="Id" type="hidden" />
+
+    <div class="content-header clearfix">
+        <h1 class="pull-left">
+            @T("Plugins.Misc.IssueManagement.Edit.EditNewIssue")
+            <small>
+                <i class="fa fa-arrow-circle-left"></i>
+                <a asp-action="List">@T("Plugins.Misc.IssueManagement.Edit.ToIssueList")</a>
+            </small>
+        </h1>
+        <div class="pull-right">
+            <button type="submit" name="save" class="btn bg-blue">
+                <i class="fa fa-floppy-o"></i>
+                @T("Admin.Common.Save")
+            </button>
+            <button type="submit" name="save-continue" class="btn bg-blue">
+                <i class="fa fa-floppy-o"></i>
+                @T("Admin.Common.SaveContinue")
+            </button>
+        </div>
+    </div>
+    <div class="content">
+        <div class="form-horizontal">
+            <nop-panels id="issue-panels">
+                <nop-panel asp-name="issue-basic-info"
+                           asp-icon="fa fa-info"
+                           asp-title="@T("Plugins.Misc.IssueManagement.Edit.BasicInfoPanel.Title")"
+                           asp-hide-block-attribute-name="@hideBasicInfoBlockAttributeName"
+                           asp-hide="@hideBasicInfoPanel"
+                           asp-advanced="false">
+                    @await Html.PartialAsync("~/Plugins/Misc.IssueManagement/Views/Edit/_BasicInfo.cshtml", Model)
+                </nop-panel>
+                <nop-panel asp-name="issue-persons-involved"
+                           asp-icon="fa fa-users"
+                           asp-title="@T("Plugins.Misc.IssueManagement.Edit.PersonsInvolvedPanel.Title")"
+                           asp-hide-block-attribute-name="@hidePersonsInvolvedBlockAttributeName"
+                           asp-hide="@hidePersonsInvolvedPanel"
+                           asp-advanced="false">
+                    @await Html.PartialAsync("~/Plugins/Misc.IssueManagement/Views/Edit/_PersonsInvolved.cshtml", Model)
+                </nop-panel>
+                <nop-panel asp-name="issue-assignments"
+                           asp-icon="fa fa-sitemap"
+                           asp-title="@T("Plugins.Misc.IssueManagement.Edit.AssignmentsPanel.Title")"
+                           asp-hide-block-attribute-name="@hideAssignmentsBlockAttributeName"
+                           asp-hide="@hideAssignmentsPanel"
+                           asp-advanced="false">
+                    @await Html.PartialAsync("~/Plugins/Misc.IssueManagement/Views/Edit/_Assignments.cshtml", Model)
+                </nop-panel>
+            </nop-panels>
+        </div>
+    </div>
+</form>

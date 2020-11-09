@@ -9,6 +9,5 @@
         Status = 4,
         PersonInvolved = 5,
         Assignment = 6,
-        Deletion = 7,
     }
 }

@@ -1,0 +1,49 @@
+﻿@using Nop.Plugin.Misc.IssueManagement.Models
+
+@model EditIssueModel
+
+<div class="form-group">
+    <div class="col-md-3">
+        <nop-label asp-for="Name" />
+    </div>
+    <div class="col-md-9">
+        <nop-editor asp-for="Name" />
+        <span asp-validation-for="Name"></span>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-3">
+        <nop-label asp-for="Description" />
+    </div>
+    <div class="col-md-9">
+        <nop-editor asp-for="Description" />
+        <span asp-validation-for="Description"></span>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-3">
+        <nop-label asp-for="Deadline" />
+    </div>
+    <div class="col-md-9">
+        <nop-editor asp-for="Deadline" />
+        <span asp-validation-for="Deadline"></span>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-3">
+        <nop-label asp-for="Priority" />
+    </div>
+    <div class="col-md-9">
+        <nop-select asp-for="Priority" asp-items="Model.PrioritySelectList" />
+        <span asp-validation-for="Priority"></span>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-3">
+        <nop-label asp-for="Status" />
+    </div>
+    <div class="col-md-9">
+        <nop-select asp-for="Status" asp-items="Model.StatusSelectList" />
+        <span asp-validation-for="Status"></span>
+    </div>
+</div>

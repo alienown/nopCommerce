@@ -17,13 +17,11 @@ namespace Nop.Plugin.Misc.IssueManagement.Controllers
     {
         private readonly IIssueService _issueService;
         private readonly IIssueModelFactory _issueModelFactory;
-        private readonly IWorkContext _workContext;
 
-        public IssueController(IIssueService issueService, IIssueModelFactory issueModelFactory, IWorkContext workContext)
+        public IssueController(IIssueService issueService, IIssueModelFactory issueModelFactory)
         {
             _issueService = issueService;
             _issueModelFactory = issueModelFactory;
-            _workContext = workContext;
         }
 
         [AuthorizeAdmin]
@@ -66,10 +64,6 @@ namespace Nop.Plugin.Misc.IssueManagement.Controllers
             if (ModelState.IsValid)
             {
                 var issue = model.ToEntity<Issue>();
-                issue.CreatedBy = _workContext.CurrentCustomer.Id;
-                var now = DateTime.UtcNow;
-                issue.CreatedAt = now;
-                issue.LastModified = now;
                 _issueService.InsertIssue(issue);
 
                 if (continueEditing)
@@ -85,9 +79,34 @@ namespace Nop.Plugin.Misc.IssueManagement.Controllers
         }
 
         [HttpGet]
-        public IActionResult Edit()
+        public IActionResult Edit(int id)
         {
-            return View("~/Plugins/Misc.IssueManagement/Views/Edit.cshtml");
+            var issue = _issueService.GetIssue(id);
+            if (issue == null || issue.Deleted)
+                return RedirectToAction("List");
+
+            var model = _issueModelFactory.PrepareEditIssueModel(null, issue);
+            return View("~/Plugins/Misc.IssueManagement/Views/Edit/Edit.cshtml", model);
+        }
+
+        [HttpPost]
+        public IActionResult Edit(EditIssueModel model, bool continueEditing)
+        {
+            if (ModelState.IsValid)
+            {
+                var issue = model.ToEntity<Issue>();
+                _issueService.UpdateIssue(issue);
+
+                if (continueEditing)
+                {
+                    return RedirectToAction("Edit", new { id = issue.Id });
+                }
+
+                return RedirectToAction("List");
+            }
+
+            model = _issueModelFactory.PrepareEditIssueModel(model, null);
+            return View("~/Plugins/Misc.IssueManagement/Views/Edit/Edit.cshtml", model);
         }
     }
 }

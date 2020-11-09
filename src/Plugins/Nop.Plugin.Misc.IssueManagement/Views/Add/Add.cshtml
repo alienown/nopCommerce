@@ -4,22 +4,22 @@
 
 @{
     Layout = "_AdminLayout";
-    ViewBag.PageTitle = T("Plugins.Misc.IssueManagement.Issue.Add.Title").Text;
+    ViewBag.PageTitle = T("Plugins.Misc.IssueManagement.Add.Title").Text;
     Html.SetActiveMenuItemSystemName("New issue");
 }
 
 @{
-    const string hideBasicInfoBlockAttributeName = "Plugins.Misc.IssueManagement.Issue.Add.BasicInfoPanel";
+    const string hideBasicInfoBlockAttributeName = "Plugins.Misc.IssueManagement.Add.BasicInfoPanel";
     var hideBasicInfoPanel = genericAttributeService.GetAttribute<bool>(workContext.CurrentCustomer, hideBasicInfoBlockAttributeName, defaultValue: true);
 }
 
 <form asp-controller="Issue" asp-action="Add" method="post">
     <div class="content-header clearfix">
         <h1 class="pull-left">
-            @T("Plugins.Misc.IssueManagement.Issue.Add.AddNewIssue")
+            @T("Plugins.Misc.IssueManagement.Add.AddNewIssue")
             <small>
                 <i class="fa fa-arrow-circle-left"></i>
-                <a asp-action="List">@T("Plugins.Misc.IssueManagement.Issue.Add.ToIssueList")</a>
+                <a asp-action="List">@T("Plugins.Misc.IssueManagement.Add.ToIssueList")</a>
             </small>
         </h1>
         <div class="pull-right">
@@ -38,7 +38,7 @@
             <nop-panels id="issue-panels">
                 <nop-panel asp-name="issue-basic-info"
                            asp-icon="fa fa-info"
-                           asp-title="@T("Plugins.Misc.IssueManagement.Issue.Add.BasicInfoPanel.Title")"
+                           asp-title="@T("Plugins.Misc.IssueManagement.Add.BasicInfoPanel.Title")"
                            asp-hide-block-attribute-name="@hideBasicInfoBlockAttributeName"
                            asp-hide="@hideBasicInfoPanel"
                            asp-advanced="false">

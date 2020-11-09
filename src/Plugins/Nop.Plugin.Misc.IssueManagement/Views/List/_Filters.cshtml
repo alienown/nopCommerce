@@ -2,4 +2,73 @@
 
 @model IssueSearchModel
 
+<div class="row">
+    <div class="col-md-5">
+        <div class="form-group">
+            <div class="col-md-4">
+                <nop-label asp-for="SearchIssueName" />
+            </div>
+            <div class="col-md-8">
+                <nop-editor asp-for="SearchIssueName" style="max-width: none;" />
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-4">
+                <nop-label asp-for="SearchIssuePriority" />
+            </div>
+            <div class="col-md-8">
+                <nop-select asp-for="SearchIssuePriority" asp-items="Model.PrioritySelectList" asp-multiple="true" />
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-4">
+                <nop-label asp-for="SearchIssueStatus" />
+            </div>
+            <div class="col-md-8">
+                <nop-select asp-for="SearchIssueStatus" asp-items="Model.StatusSelectList" asp-multiple="true" />
+            </div>
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div class="form-group">
+            <div class="col-md-4">
+                <nop-label asp-for="SearchDeadlineFrom" />
+            </div>
+            <div class="col-md-8">
+                <nop-editor asp-for="SearchDeadlineFrom" />
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-4">
+                <nop-label asp-for="SearchDeadlineTo" />
+            </div>
+            <div class="col-md-8">
+                <nop-editor asp-for="SearchDeadlineTo" />
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-7 col-md-offset-5">
+        <button type="button" id="search-issues" class="btn btn-primary btn-search">
+            <i class="fa fa-search"></i>
+            @T("Admin.Common.Search")
+        </button>
+    </div>
+</div>
 
+<script>
+    $(document).ready(function () {
+        var issueStatusesMultiSelect = $('#SearchIssueStatus').data('kendoMultiSelect');
+        issueStatusesMultiSelect.setOptions({
+            autoClose: false,
+            filter: 'contains',
+        });
+
+        var issuePrioritiesMultiSelect = $('#SearchIssuePriority').data('kendoMultiSelect');
+        issuePrioritiesMultiSelect.setOptions({
+            autoClose: false,
+            filter: 'contains',
+        });
+    });
+</script>

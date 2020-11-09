@@ -2,10 +2,10 @@
 {
     public enum IssuePriority
     {
-        Low = 0,
-        Normal = 1,
-        Important = 2,
-        Urgent = 3,
-        Critical = 4
+        Low = 1,
+        Normal = 2,
+        Important = 3,
+        Urgent = 4,
+        Critical = 5
     }
 }

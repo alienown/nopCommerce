@@ -10,8 +10,11 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
     {
         Issue GetIssue(int id);
 
-        IPagedList<Issue> GetIssueList(int pageIndex = 0, int pageSize = int.MaxValue, bool getOnlyTotalCount = false);
+        IPagedList<Issue> GetIssueList(string name, List<IssuePriority> priorities, List<IssueStatus> statuses, DateTime? deadlineFrom, DateTime? deadlineTo,
+            int pageIndex = 0, int pageSize = int.MaxValue, bool getOnlyTotalCount = false);
 
         void InsertIssue(Issue issue);
+
+        void UpdateIssue(Issue issue);
     }
 }

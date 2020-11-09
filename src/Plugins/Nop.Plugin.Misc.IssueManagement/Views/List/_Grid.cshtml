@@ -12,45 +12,67 @@
         SearchButtonId = "search-issues",
         Length = Model.PageSize,
         LengthMenu = Model.AvailablePageSizes,
+        Filters = new List<FilterParameter>
+        {
+            new FilterParameter(nameof(Model.SearchIssueName)),
+            new FilterParameter(nameof(Model.SearchIssuePriority)),
+            new FilterParameter(nameof(Model.SearchIssueStatus)),
+            new FilterParameter(nameof(Model.SearchDeadlineFrom), typeof(DateTime?)),
+            new FilterParameter(nameof(Model.SearchDeadlineTo), typeof(DateTime?)),
+        }
     };
 
     gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.Name))
     {
-        Title = T("Plugins.Misc.IssueManagement.Issue.List.Grid.Columns.Name").Text
+        Title = T("Plugins.Misc.IssueManagement.List.Grid.Columns.Name").Text
     });
     gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.StatusDisplay))
     {
-        Title = T("Plugins.Misc.IssueManagement.Issue.List.Grid.Columns.Status").Text,
+        Title = T("Plugins.Misc.IssueManagement.List.Grid.Columns.Status").Text,
         Width = "100",
         Render = new RenderCustom("renderIssueStatus"),
     });
     gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.PriorityDisplay))
     {
-        Title = T("Plugins.Misc.IssueManagement.Issue.List.Grid.Columns.Priority").Text,
+        Title = T("Plugins.Misc.IssueManagement.List.Grid.Columns.Priority").Text,
         Width = "100",
         Render = new RenderCustom("renderIssuePriority"),
     });
     gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.Deadline))
     {
-        Title = T("Plugins.Misc.IssueManagement.Issue.List.Grid.Columns.Deadline").Text,
+        Title = T("Plugins.Misc.IssueManagement.List.Grid.Columns.Deadline").Text,
         Width = "170",
         Render = new RenderDate(),
     });
     gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.CreatedBy))
     {
-        Title = T("Plugins.Misc.IssueManagement.Issue.List.Grid.Columns.CreatedBy").Text
+        Title = T("Plugins.Misc.IssueManagement.List.Grid.Columns.CreatedBy").Text
     });
     gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.CreatedAt))
     {
-        Title = T("Plugins.Misc.IssueManagement.Issue.List.Grid.Columns.CreatedAt").Text,
+        Title = T("Plugins.Misc.IssueManagement.List.Grid.Columns.CreatedAt").Text,
         Width = "170",
         Render = new RenderDate(),
     });
     gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.LastModified))
     {
-        Title = T("Plugins.Misc.IssueManagement.Issue.List.Grid.Columns.LastModified").Text,
+        Title = T("Plugins.Misc.IssueManagement.List.Grid.Columns.LastModified").Text,
         Width = "170",
         Render = new RenderDate(),
+    });
+    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.Id))
+    {
+        Title = T("Admin.Common.View").Text,
+        Width = "50",
+        ClassName = NopColumnClassDefaults.Button,
+        Render = new RenderButtonView(new DataUrl("Index"))
+    });
+    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.Id))
+    {
+        Title = T("Admin.Common.Edit").Text,
+        Width = "80",
+        ClassName = NopColumnClassDefaults.Button,
+        Render = new RenderButtonEdit(new DataUrl("Edit"))
     });
 }
 

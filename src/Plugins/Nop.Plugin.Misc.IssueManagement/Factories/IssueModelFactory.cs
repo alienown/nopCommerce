@@ -1,5 +1,4 @@
 ﻿using System;
-using Nop.Core;
 using Nop.Services;
 using Nop.Plugin.Misc.IssueManagement.Domain;
 using Nop.Plugin.Misc.IssueManagement.Models;
@@ -8,12 +7,11 @@ using Nop.Web.Framework.Models.Extensions;
 using System.Linq;
 using Nop.Web.Areas.Admin.Infrastructure.Mapper.Extensions;
 using Nop.Services.Customers;
-using Nop.Services.Vendors;
 using Nop.Core.Domain.Customers;
-using Nop.Services.Common;
-using System.Collections.Generic;
 using Nop.Services.Helpers;
 using Nop.Services.Localization;
+using NUglify.Helpers;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Nop.Plugin.Misc.IssueManagement.Factories
 {
@@ -46,16 +44,45 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
             return model;
         }
 
+        public EditIssueModel PrepareEditIssueModel(EditIssueModel model, Issue entity)
+        {
+            if (model == null)
+            {
+                model = new EditIssueModel
+                {
+                    Id = entity.Id,
+                    Name = entity.Name,
+                    Description = entity.Description,
+                    Priority = entity.Priority,
+                    Status = entity.Status,
+                    Deadline = entity.Deadline,
+                };
+            }           
+
+            model.PrioritySelectList = IssuePriority.Normal.ToSelectList();
+            model.StatusSelectList = IssueStatus.New.ToSelectList();
+
+            return model;
+        }
+
         public IssueSearchModel PrepareIssueSearchModel()
         {
             var model = new IssueSearchModel();
+
+            model.PrioritySelectList = IssuePriority.Normal.ToSelectList(markCurrentAsSelected: false).Select(x => x).ToList();
+            model.StatusSelectList = IssueStatus.New.ToSelectList(markCurrentAsSelected: false).Select(x => x).ToList();
             model.SetGridPageSize();
+
             return model;
         }
 
         public IssueListModel PrepareIssueListModel(IssueSearchModel searchModel)
         {
-            var issueList = _issueService.GetIssueList(searchModel.Page - 1, searchModel.PageSize);
+            var issueStatuses = searchModel.SearchIssueStatus.Select(x => (IssueStatus)x).ToList();
+            var issueProrities = searchModel.SearchIssuePriority.Select(x => (IssuePriority)x).ToList();
+
+            var issueList = _issueService.GetIssueList(searchModel.SearchIssueName, issueProrities, issueStatuses,
+                searchModel.SearchDeadlineFrom, searchModel.SearchDeadlineTo, searchModel.Page - 1, searchModel.PageSize);
 
             var model = new IssueListModel().PrepareToGrid(searchModel, issueList, () =>
             {
