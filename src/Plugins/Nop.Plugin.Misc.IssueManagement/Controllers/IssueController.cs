@@ -59,6 +59,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Controllers
         }
 
         [HttpPost]
+        [ParameterBasedOnFormName("save-continue", "continueEditing")]
         public IActionResult Add(AddIssueModel model, bool continueEditing)
         {
             if (ModelState.IsValid)
@@ -90,6 +91,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Controllers
         }
 
         [HttpPost]
+        [ParameterBasedOnFormName("save-continue", "continueEditing")]
         public IActionResult Edit(EditIssueModel model, bool continueEditing)
         {
             if (ModelState.IsValid)
@@ -114,6 +116,20 @@ namespace Nop.Plugin.Misc.IssueManagement.Controllers
         {
             _issueService.DeleteIssue(id);
             return RedirectToAction("List");
+        }
+
+        [HttpPost]
+        public IActionResult IssuePersonInvolvedList(IssuePersonInvolvedSearchModel searchModel)
+        {
+            var model = _issueModelFactory.PrepareIssuePersonInvolvedListModel(searchModel);
+            return Json(model);
+        }
+
+        [HttpPost]
+        public IActionResult IssueAssignmentList(IssueAssignmentSearchModel searchModel)
+        {
+            var model = _issueModelFactory.PrepareIssueAssignmentListModel(searchModel);
+            return Json(model);
         }
     }
 }

@@ -18,5 +18,17 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
         void UpdateIssue(Issue issue);
 
         void DeleteIssue(int id);
+
+        IPagedList<IssuePersonInvolved> GetPersonInvolvedList(int pageIndex = 0, int pageSize = int.MaxValue, bool getOnlyTotalCount = false);
+
+        void InsertPersonInvolved(IssuePersonInvolved issuePersonInvolved);
+
+        void DeletePersonInvolved(int id);
+
+        IPagedList<IssueAssignment> GetAssignmentList(int pageIndex = 0, int pageSize = int.MaxValue, bool getOnlyTotalCount = false);
+
+        void InsertAssignment(IssueAssignment issueAssignment);
+
+        void DeleteAssignment(int id);
     }
 }

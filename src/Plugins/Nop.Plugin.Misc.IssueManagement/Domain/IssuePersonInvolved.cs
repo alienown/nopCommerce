@@ -5,7 +5,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Domain
 {
     public class IssuePersonInvolved : BaseEntity
     {
-        public int UserId { get; set; }
+        public int CustomerId { get; set; }
 
         public int IssueId { get; set; }
 

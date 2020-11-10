@@ -28,5 +28,9 @@ namespace Nop.Plugin.Misc.IssueManagement.Models
         public SelectList PrioritySelectList { get; set; }
 
         public SelectList StatusSelectList { get; set; }
+
+        public IssuePersonInvolvedSearchModel PersonInvolvedSearchModel { get; set; }
+
+        public IssueAssignmentSearchModel AssignmentSearchModel { get; set; }
     }
 }

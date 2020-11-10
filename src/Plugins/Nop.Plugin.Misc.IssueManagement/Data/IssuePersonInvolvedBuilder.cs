@@ -12,7 +12,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Data
         public override void MapEntity(CreateTableExpressionBuilder table)
         {
             table
-                .WithColumn(nameof(IssuePersonInvolved.UserId)).AsInt32().ForeignKey<Customer>(onDelete: Rule.None)
+                .WithColumn(nameof(IssuePersonInvolved.CustomerId)).AsInt32().ForeignKey<Customer>(onDelete: Rule.None)
                 .WithColumn(nameof(IssuePersonInvolved.IssueId)).AsInt32().ForeignKey<Issue>(onDelete: Rule.None)
                 .WithColumn(nameof(IssuePersonInvolved.CreatedBy)).AsInt32().ForeignKey<Customer>(onDelete: Rule.None)
                 .WithColumn(nameof(IssuePersonInvolved.CreatedAt)).AsDateTime2();

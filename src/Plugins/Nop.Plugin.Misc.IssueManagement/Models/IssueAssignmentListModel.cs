@@ -2,7 +2,7 @@
 
 namespace Nop.Plugin.Misc.IssueManagement.Models
 {
-    public class IssueListModel : BasePagedListModel<IssueGridItemModel>
+    public class IssueAssignmentListModel : BasePagedListModel<IssueAssignmentGridItem>
     {
     }
 }

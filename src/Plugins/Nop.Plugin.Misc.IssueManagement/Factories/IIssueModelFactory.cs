@@ -1,6 +1,4 @@
-﻿using System;
-using Nop.Core;
-using Nop.Plugin.Misc.IssueManagement.Domain;
+﻿using Nop.Plugin.Misc.IssueManagement.Domain;
 using Nop.Plugin.Misc.IssueManagement.Models;
 
 namespace Nop.Plugin.Misc.IssueManagement.Factories
@@ -14,5 +12,13 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
         IssueSearchModel PrepareIssueSearchModel();
 
         IssueListModel PrepareIssueListModel(IssueSearchModel model);
+
+        IssuePersonInvolvedListModel PrepareIssuePersonInvolvedListModel(IssuePersonInvolvedSearchModel searchModel);
+
+        IssuePersonInvolvedSearchModel PrepareIssuePersonInvolvedSearchModel();
+
+        IssueAssignmentListModel PrepareIssueAssignmentListModel(IssueAssignmentSearchModel searchModel);
+
+        IssueAssignmentSearchModel PrepareIssueAssignmentSearchModel();
     }
 }

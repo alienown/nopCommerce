@@ -62,7 +62,7 @@
                            asp-hide-block-attribute-name="@hidePersonsInvolvedBlockAttributeName"
                            asp-hide="@hidePersonsInvolvedPanel"
                            asp-advanced="false">
-                    @await Html.PartialAsync("~/Plugins/Misc.IssueManagement/Views/Edit/_PersonsInvolved.cshtml", Model)
+                    @await Html.PartialAsync("~/Plugins/Misc.IssueManagement/Views/Edit/_PersonsInvolved.cshtml", Model.PersonInvolvedSearchModel)
                 </nop-panel>
                 <nop-panel asp-name="issue-assignments"
                            asp-icon="fa fa-sitemap"
@@ -70,7 +70,7 @@
                            asp-hide-block-attribute-name="@hideAssignmentsBlockAttributeName"
                            asp-hide="@hideAssignmentsPanel"
                            asp-advanced="false">
-                    @await Html.PartialAsync("~/Plugins/Misc.IssueManagement/Views/Edit/_Assignments.cshtml", Model)
+                    @await Html.PartialAsync("~/Plugins/Misc.IssueManagement/Views/Edit/_Assignments.cshtml", Model.AssignmentSearchModel)
                 </nop-panel>
             </nop-panels>
         </div>

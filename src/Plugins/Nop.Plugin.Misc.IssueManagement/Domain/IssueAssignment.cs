@@ -10,6 +10,8 @@ namespace Nop.Plugin.Misc.IssueManagement.Domain
 
         public int TaskId { get; set; }
 
+        public IssueAssignmentType AssignmentType { get; set; }
+
         public int CreatedBy { get; set; }
 
         public DateTime CreatedAt { get; set; }

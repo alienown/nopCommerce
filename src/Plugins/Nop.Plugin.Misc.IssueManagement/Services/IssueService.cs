@@ -13,12 +13,17 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
         private readonly IWorkContext _workContext;
         private readonly IRepository<Issue> _issueRepository;
         private readonly IRepository<IssueHistory> _issueHistoryRepository;
+        private readonly IRepository<IssuePersonInvolved> _issuePersonsInvolvedRepository;
+        private readonly IRepository<IssueAssignment> _issueAssignmentRepository;
 
-        public IssueService(IWorkContext workContext, IRepository<Issue> issueRepository, IRepository<IssueHistory> issueHistoryRepository)
+        public IssueService(IWorkContext workContext, IRepository<Issue> issueRepository, IRepository<IssueHistory> issueHistoryRepository,
+            IRepository<IssuePersonInvolved> issuePersonsInvolvedRepository, IRepository<IssueAssignment> issueAssignmentRepository)
         {
             _workContext = workContext;
             _issueRepository = issueRepository;
             _issueHistoryRepository = issueHistoryRepository;
+            _issuePersonsInvolvedRepository = issuePersonsInvolvedRepository;
+            _issueAssignmentRepository = issueAssignmentRepository;
         }
 
         public Issue GetIssue(int id)
@@ -85,6 +90,61 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
             _issueHistoryRepository.Insert(changes);
         }
 
+        public void DeleteIssue(int id)
+        {
+            var issue = _issueRepository.GetById(id);
+            if (issue != null)
+            {
+                _issueRepository.Delete(issue);
+            }
+        }
+
+        public IPagedList<IssuePersonInvolved> GetPersonInvolvedList(int pageIndex = 0, int pageSize = int.MaxValue, bool getOnlyTotalCount = false)
+        {
+            var list = _issuePersonsInvolvedRepository.GetAllPaged(pageIndex: pageIndex, pageSize: pageSize, getOnlyTotalCount: getOnlyTotalCount);
+            return list;
+        }
+
+        public void InsertPersonInvolved(IssuePersonInvolved issuePersonInvolved)
+        {
+            var now = DateTime.UtcNow;
+            issuePersonInvolved.CreatedBy = _workContext.CurrentCustomer.Id;
+            issuePersonInvolved.CreatedAt = now;
+            _issuePersonsInvolvedRepository.Insert(issuePersonInvolved);
+        }
+
+        public void DeletePersonInvolved(int id)
+        {
+            var personInvolved = _issuePersonsInvolvedRepository.GetById(id);
+            if (personInvolved != null)
+            {
+                _issuePersonsInvolvedRepository.Delete(personInvolved);
+            }
+        }
+
+        public IPagedList<IssueAssignment> GetAssignmentList(int pageIndex = 0, int pageSize = int.MaxValue, bool getOnlyTotalCount = false)
+        {
+            var list = _issueAssignmentRepository.GetAllPaged(pageIndex: pageIndex, pageSize: pageSize, getOnlyTotalCount: getOnlyTotalCount);
+            return list;
+        }
+
+        public void InsertAssignment(IssueAssignment issueAssignment)
+        {
+            var now = DateTime.UtcNow;
+            issueAssignment.CreatedBy = _workContext.CurrentCustomer.Id;
+            issueAssignment.CreatedAt = now;
+            _issueAssignmentRepository.Insert(issueAssignment);
+        }
+
+        public void DeleteAssignment(int id)
+        {
+            var assignment = _issueAssignmentRepository.GetById(id);
+            if (assignment != null)
+            {
+                _issueAssignmentRepository.Delete(assignment);
+            }
+        }
+
         private List<IssueHistory> GenerateIssueHistoryEntiresForIssueEntity(Issue modifiedIssue)
         {
             var result = new List<IssueHistory>();
@@ -136,15 +196,6 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
                 ModifiedAt = modifiedAt,
                 ModifiedBy = modifiedBy,
             };
-        }
-
-        public void DeleteIssue(int id)
-        {
-            var issue = _issueRepository.GetById(id);
-            if (issue != null)
-            {
-                _issueRepository.Delete(issue);
-            }
         }
     }
 }
