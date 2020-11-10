@@ -137,5 +137,14 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
                 ModifiedBy = modifiedBy,
             };
         }
+
+        public void DeleteIssue(int id)
+        {
+            var issue = _issueRepository.GetById(id);
+            if (issue != null)
+            {
+                _issueRepository.Delete(issue);
+            }
+        }
     }
 }

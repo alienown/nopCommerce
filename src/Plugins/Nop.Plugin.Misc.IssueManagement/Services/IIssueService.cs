@@ -16,5 +16,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
         void InsertIssue(Issue issue);
 
         void UpdateIssue(Issue issue);
+
+        void DeleteIssue(int id);
     }
 }

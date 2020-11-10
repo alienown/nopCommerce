@@ -108,5 +108,12 @@ namespace Nop.Plugin.Misc.IssueManagement.Controllers
             model = _issueModelFactory.PrepareEditIssueModel(model, null);
             return View("~/Plugins/Misc.IssueManagement/Views/Edit/Edit.cshtml", model);
         }
+
+        [HttpPost]
+        public IActionResult Delete(int id)
+        {
+            _issueService.DeleteIssue(id);
+            return RedirectToAction("List");
+        }
     }
 }
