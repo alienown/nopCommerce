@@ -1,10 +1,10 @@
-﻿using System;
-using Microsoft.AspNetCore.Mvc;
-using Nop.Core;
+﻿using Microsoft.AspNetCore.Mvc;
 using Nop.Plugin.Misc.IssueManagement.Domain;
 using Nop.Plugin.Misc.IssueManagement.Factories;
 using Nop.Plugin.Misc.IssueManagement.Models;
 using Nop.Plugin.Misc.IssueManagement.Services;
+using Nop.Services.Localization;
+using Nop.Services.Messages;
 using Nop.Web.Areas.Admin.Infrastructure.Mapper.Extensions;
 using Nop.Web.Framework;
 using Nop.Web.Framework.Controllers;
@@ -17,11 +17,16 @@ namespace Nop.Plugin.Misc.IssueManagement.Controllers
     {
         private readonly IIssueService _issueService;
         private readonly IIssueModelFactory _issueModelFactory;
+        private readonly ILocalizationService _localizationService;
+        private readonly INotificationService _notificationService;
 
-        public IssueController(IIssueService issueService, IIssueModelFactory issueModelFactory)
+        public IssueController(IIssueService issueService, IIssueModelFactory issueModelFactory, ILocalizationService localizationService,
+            INotificationService notificationService)
         {
             _issueService = issueService;
             _issueModelFactory = issueModelFactory;
+            _localizationService = localizationService;
+            _notificationService = notificationService;
         }
 
         [AuthorizeAdmin]
@@ -29,12 +34,6 @@ namespace Nop.Plugin.Misc.IssueManagement.Controllers
         {
             var model = new ConfigurationModel();
             return View("~/Plugins/Misc.IssueManagement/Views/Configure.cshtml", model);
-        }
-
-        [HttpGet]
-        public IActionResult Index(int id)
-        {
-            return View("~/Plugins/Misc.IssueManagement/Views/Index.cshtml");
         }
 
         [HttpGet]
@@ -54,12 +53,12 @@ namespace Nop.Plugin.Misc.IssueManagement.Controllers
         [HttpGet]
         public IActionResult Add()
         {
-            var model = _issueModelFactory.PrepareAddIssueModel(new AddIssueModel());
+            var model = _issueModelFactory.PrepareAddIssueModel(null);
             return View("~/Plugins/Misc.IssueManagement/Views/Add/Add.cshtml", model);
         }
 
         [HttpPost]
-        [ParameterBasedOnFormName("save-continue", "continueEditing")]
+        [ParameterBasedOnFormName("saveContinueButton", "continueEditing")]
         public IActionResult Add(AddIssueModel model, bool continueEditing)
         {
             if (ModelState.IsValid)
@@ -67,9 +66,11 @@ namespace Nop.Plugin.Misc.IssueManagement.Controllers
                 var issue = model.ToEntity<Issue>();
                 _issueService.InsertIssue(issue);
 
+                _notificationService.SuccessNotification(_localizationService.GetResource("Plugins.Misc.IssueManagement.Add.AddSuccess"));
+
                 if (continueEditing)
                 {
-                    return RedirectToAction("Edit", new { id = issue.Id });
+                    return RedirectToAction("Index", new { id = issue.Id });
                 }
 
                 return RedirectToAction("List");
@@ -80,56 +81,106 @@ namespace Nop.Plugin.Misc.IssueManagement.Controllers
         }
 
         [HttpGet]
-        public IActionResult Edit(int id)
+        public IActionResult Index(int id)
         {
             var issue = _issueService.GetIssue(id);
             if (issue == null || issue.Deleted)
                 return RedirectToAction("List");
 
             var model = _issueModelFactory.PrepareEditIssueModel(null, issue);
-            return View("~/Plugins/Misc.IssueManagement/Views/Edit/Edit.cshtml", model);
+            return View("~/Plugins/Misc.IssueManagement/Views/Index/Index.cshtml", model);
         }
 
         [HttpPost]
-        [ParameterBasedOnFormName("save-continue", "continueEditing")]
-        public IActionResult Edit(EditIssueModel model, bool continueEditing)
+        public IActionResult SaveBasicInfo(EditBasicInfoPanelModel model)
         {
             if (ModelState.IsValid)
             {
                 var issue = model.ToEntity<Issue>();
                 _issueService.UpdateIssue(issue);
-
-                if (continueEditing)
-                {
-                    return RedirectToAction("Edit", new { id = issue.Id });
-                }
-
-                return RedirectToAction("List");
+                _notificationService.SuccessNotification(_localizationService.GetResource("Plugins.Misc.IssueManagement.Edit.UpdateSuccess"));
+                return Json(new { Result = true, id = issue.Id });
             }
 
-            model = _issueModelFactory.PrepareEditIssueModel(model, null);
-            return View("~/Plugins/Misc.IssueManagement/Views/Edit/Edit.cshtml", model);
+            model = _issueModelFactory.PrepareEditBasicInfoPanelModel(model, null);
+            return View("~/Plugins/Misc.IssueManagement/Views/Index/_BasicInfo.cshtml", model);
         }
 
         [HttpPost]
         public IActionResult Delete(int id)
         {
             _issueService.DeleteIssue(id);
+            _notificationService.SuccessNotification(_localizationService.GetResource("Plugins.Misc.IssueManagement.Delete.DeleteSuccess"));
             return RedirectToAction("List");
         }
 
         [HttpPost]
-        public IActionResult IssuePersonInvolvedList(IssuePersonInvolvedSearchModel searchModel)
+        public IActionResult IssuePersonInvolvedList(IssuePersonsInvolvedSearchModel searchModel)
         {
             var model = _issueModelFactory.PrepareIssuePersonInvolvedListModel(searchModel);
             return Json(model);
         }
 
         [HttpPost]
-        public IActionResult IssueAssignmentList(IssueAssignmentSearchModel searchModel)
+        public IActionResult IssueAssignmentList(IssueAssignmentsSearchModel searchModel)
         {
             var model = _issueModelFactory.PrepareIssueAssignmentListModel(searchModel);
             return Json(model);
+        }
+
+        [HttpPost]
+        public IActionResult GetPersonsInvolvedForAddComboBox(string text, int issueId)
+        {
+            var list = _issueModelFactory.GetPersonsInvolvedForAddComboBox(text, issueId);
+            return Json(list);
+        }
+
+        [HttpPost]
+        public IActionResult AddPersonInvolved(int customerId, int issueId)
+        {
+            var personInvolved = new IssuePersonInvolved
+            {
+                CustomerId = customerId,
+                IssueId = issueId,
+            };
+
+            _issueService.InsertPersonInvolved(personInvolved);
+            return Json(new { Result = true });
+        }
+
+        [HttpPost]
+        public IActionResult DeletePersonInvolved(int id)
+        {
+            _issueService.DeletePersonInvolved(id);
+            return Json(new { Result = true });
+        }
+
+        [HttpPost]
+        public IActionResult GetAssignmentsForAddComboBox(string text, IssueAssignmentType assignmentType, int issueId)
+        {
+            var list = _issueModelFactory.GetAssignmentsForAddComboBox(text, assignmentType, issueId);
+            return Json(list);
+        }
+
+        [HttpPost]
+        public IActionResult AddAssignment(int? objectId, IssueAssignmentType assignmentType, int issueId)
+        {
+            var assignment = new IssueAssignment
+            {
+                ObjectId = objectId,
+                IssueId = issueId,
+                AssignmentType = assignmentType,
+            };
+
+            _issueService.InsertAssignment(assignment);
+            return Json(new { Result = true });
+        }
+
+        [HttpPost]
+        public IActionResult DeleteAssignment(int id)
+        {
+            _issueService.DeleteAssignment(id);
+            return Json(new { Result = true });
         }
     }
 }

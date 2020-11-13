@@ -1,8 +1,0 @@
-﻿using Nop.Web.Framework.Models;
-
-namespace Nop.Plugin.Misc.IssueManagement.Models
-{
-    public class IssuePersonInvolvedListModel : BasePagedListModel<IssuePersonInvolvedGridItem>
-    {
-    }
-}

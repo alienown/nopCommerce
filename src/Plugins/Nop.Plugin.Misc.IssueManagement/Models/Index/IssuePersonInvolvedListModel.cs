@@ -2,7 +2,7 @@
 
 namespace Nop.Plugin.Misc.IssueManagement.Models
 {
-    public class IssuePersonInvolvedSearchModel : BaseSearchModel
+    public class IssuePersonInvolvedListModel : BasePagedListModel<IssuePersonsInvolvedGridItem>
     {
     }
 }

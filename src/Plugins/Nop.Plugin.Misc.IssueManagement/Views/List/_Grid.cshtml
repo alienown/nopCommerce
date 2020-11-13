@@ -7,7 +7,7 @@
 @{
     var gridModel = new DataTablesModel
     {
-        Name = "issues-grid",
+        Name = "issuesGrid",
         UrlRead = new DataUrl("IssueList", "Issue", null),
         SearchButtonId = "search-issues",
         Length = Model.PageSize,
@@ -66,13 +66,6 @@
         Width = "50",
         ClassName = NopColumnClassDefaults.Button,
         Render = new RenderButtonView(new DataUrl("Index"))
-    });
-    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.Id))
-    {
-        Title = T("Admin.Common.Edit").Text,
-        Width = "50",
-        ClassName = NopColumnClassDefaults.Button,
-        Render = new RenderButtonEdit(new DataUrl("Edit"))
     });
 }
 

@@ -13,7 +13,8 @@ namespace Nop.Plugin.Misc.IssueManagement.Data
         {
             table
                 .WithColumn(nameof(IssueAssignment.ObjectId)).AsInt32().Nullable()
-                .WithColumn(nameof(IssueAssignment.TaskId)).AsInt32().ForeignKey<Issue>(onDelete: Rule.None)
+                .WithColumn(nameof(IssueAssignment.AssignmentType)).AsByte()
+                .WithColumn(nameof(IssueAssignment.IssueId)).AsInt32().ForeignKey<Issue>(onDelete: Rule.None)
                 .WithColumn(nameof(IssueAssignment.CreatedBy)).AsInt32().ForeignKey<Customer>(onDelete: Rule.None)
                 .WithColumn(nameof(IssueAssignment.CreatedAt)).AsDateTime2();
         }

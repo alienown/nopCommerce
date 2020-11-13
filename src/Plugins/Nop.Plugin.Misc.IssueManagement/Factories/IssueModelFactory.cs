@@ -12,6 +12,7 @@ using Nop.Services.Helpers;
 using Nop.Services.Localization;
 using System.Collections.Generic;
 using Nop.Services.Catalog;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Nop.Plugin.Misc.IssueManagement.Factories
 {
@@ -53,20 +54,157 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
                 model = new EditIssueModel
                 {
                     Id = entity.Id,
+                    BasicInfoPanelModel = PrepareEditBasicInfoPanelModel(null, entity),
+                };
+            }
+            else
+            {
+                model.BasicInfoPanelModel = PrepareEditBasicInfoPanelModel(model.BasicInfoPanelModel, null);
+            }
+
+            model.PersonsInvolvedPanelModel = PrepareEditIssuePersonsInvolvedPanelModel(model);
+            model.AssignmentsPanelModel = PrepareEditIssueAssignmentsPanelModel(model);
+
+            return model;
+        }
+
+        public EditBasicInfoPanelModel PrepareEditBasicInfoPanelModel(EditBasicInfoPanelModel model, Issue entity)
+        {
+            if (model == null)
+            {
+                model = new EditBasicInfoPanelModel
+                {
+                    Id = entity.Id,
                     Name = entity.Name,
                     Description = entity.Description,
                     Priority = entity.Priority,
                     Status = entity.Status,
                     Deadline = entity.Deadline,
                 };
-            }           
+            }
 
             model.PrioritySelectList = IssuePriority.Normal.ToSelectList();
             model.StatusSelectList = IssueStatus.New.ToSelectList();
-            model.PersonInvolvedSearchModel = PrepareIssuePersonInvolvedSearchModel();
-            model.AssignmentSearchModel = PrepareIssueAssignmentSearchModel();
 
             return model;
+        }
+
+        private EditIssuePersonsInvolvedPanelModel PrepareEditIssuePersonsInvolvedPanelModel(EditIssueModel model)
+        {
+            var panelModel = new EditIssuePersonsInvolvedPanelModel();
+            panelModel.PersonsInvolvedSearchModel = PrepareIssuePersonsInvolvedSearchModel(model);
+            return panelModel;
+        }
+
+        private IssuePersonsInvolvedSearchModel PrepareIssuePersonsInvolvedSearchModel(EditIssueModel model)
+        {
+            var searchModel = new IssuePersonsInvolvedSearchModel { IssueId = model.Id };
+            return searchModel;
+        }
+
+        public IssuePersonInvolvedListModel PrepareIssuePersonInvolvedListModel(IssuePersonsInvolvedSearchModel searchModel)
+        {
+            var personInvolvedList = _issueService.GetPersonInvolvedList(searchModel.IssueId, searchModel.Page - 1, searchModel.PageSize);
+            var customersIds = personInvolvedList.Select(x => x.CustomerId);
+            var customers = _customerService.GetCustomersByIds(customersIds.ToArray());
+            var customerIdToCustomer = customers.ToDictionary(x => x.Id);
+
+            var model = new IssuePersonInvolvedListModel().PrepareToGrid(searchModel, personInvolvedList, () =>
+            {
+                var items = personInvolvedList.Select(x =>
+                {
+                    var item = new IssuePersonsInvolvedGridItem();
+
+                    var customerFullName = _customerService.GetCustomerFullName(new Customer
+                    {
+                        Id = x.CustomerId,
+                    });
+
+                    item.Id = x.Id;
+                    item.Name = customerFullName;
+                    item.Email = customerIdToCustomer[x.CustomerId].Email;
+
+                    return item;
+                });
+
+                return items;
+            });
+
+            return model;
+        }
+
+        private EditIssueAssignmentsPanelModel PrepareEditIssueAssignmentsPanelModel(EditIssueModel model)
+        {
+            var panelModel = new EditIssueAssignmentsPanelModel();
+            panelModel.AssignmentTypesSelectList = IssueAssignmentType.Product.ToSelectList();
+            panelModel.AssignmentsSearchModel = PrepareIssueAssignmentsSearchModel(model);
+            return panelModel;
+        }
+
+        private IssueAssignmentsSearchModel PrepareIssueAssignmentsSearchModel(EditIssueModel model)
+        {
+            var searchModel = new IssueAssignmentsSearchModel { IssueId = model.Id };
+            return searchModel;
+        }
+
+        public IssueAssignmentListModel PrepareIssueAssignmentListModel(IssueAssignmentsSearchModel searchModel)
+        {
+            var assignmentList = _issueService.GetAssignmentList(searchModel.IssueId, null, searchModel.Page - 1, searchModel.PageSize);
+            var preload = GetAssignmentsInfoPreload(assignmentList.ToList());
+
+            var model = new IssueAssignmentListModel().PrepareToGrid(searchModel, assignmentList, () =>
+            {
+                var items = assignmentList.Select(x =>
+                {
+                    var item = new IssueAssignmentsGridItem();
+
+                    item.Id = x.Id;
+                    item.ObjectId = x.ObjectId;
+
+                    switch (item.AssignmentType)
+                    {
+                        case IssueAssignmentType.Product:
+                            if (preload.Products.TryGetValue(item.ObjectId.Value, out var productInfo))
+                            {
+                                item.ProductInfo = productInfo;
+                            }
+                            break;
+                        default:
+                            throw new NotImplementedException();
+                    }
+
+                    return item;
+                }).OrderBy(x => x.AssignmentType).ToList();
+
+                return items;
+            });
+
+            return model;
+        }
+
+        private IssueAssignmentPreloadContainer GetAssignmentsInfoPreload(List<IssueAssignment> assignments)
+        {
+            var assignmentTypeToAssignments = assignments.ToLookup(x => x.AssignmentType);
+
+            var productsIds = assignmentTypeToAssignments[IssueAssignmentType.Product].Select(x => x.ObjectId.Value).ToList();
+            var productsInfo = GetProductAssignmentsInfo(productsIds);
+
+            var container = new IssueAssignmentPreloadContainer
+            {
+                Products = productsInfo,
+            };
+
+            return container;
+        }
+
+        private Dictionary<int, IssueProductAssignmentInfo> GetProductAssignmentsInfo(List<int> productsIds)
+        {
+            var productIdToProductInfo = _productService.GetProductsByIds(productsIds.ToArray()).ToDictionary(x => x.Id, y => new IssueProductAssignmentInfo
+            {
+                Name = y.Name,
+            });
+
+            return productIdToProductInfo;
         }
 
         public IssueSearchModel PrepareIssueSearchModel()
@@ -114,107 +252,34 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
             return model;
         }
 
-        public IssuePersonInvolvedSearchModel PrepareIssuePersonInvolvedSearchModel()
+        public List<SelectListItem> GetPersonsInvolvedForAddComboBox(string text, int excludePersonsFromIssueId)
         {
-            var model = new IssuePersonInvolvedSearchModel();
-            return model;
-        }
+            var existingPersonsInvolved = _issueService.GetPersonInvolvedList(excludePersonsFromIssueId);
+            var existingPersonsInvolvedIds = existingPersonsInvolved.Select(x => x.CustomerId).ToList();
+            var personsInvolved = _issueService.QuickSearchCustomers(text, existingPersonsInvolvedIds);
 
-        public IssuePersonInvolvedListModel PrepareIssuePersonInvolvedListModel(IssuePersonInvolvedSearchModel searchModel)
-        {
-            var personInvolvedList = _issueService.GetPersonInvolvedList(searchModel.Page - 1, searchModel.PageSize);
-            var customersIds = personInvolvedList.Select(x => x.CustomerId);
-            var customers = _customerService.GetCustomersByIds(customersIds.ToArray());
-            var customerIdToCustomer = customers.ToDictionary(x => x.Id);
-
-            var model = new IssuePersonInvolvedListModel().PrepareToGrid(searchModel, personInvolvedList, () =>
+            var list = personsInvolved.Select(x => new SelectListItem
             {
-                var items = personInvolvedList.Select(x =>
-                {
-                    var item = new IssuePersonInvolvedGridItem();
+                Value = x.CustomerId.ToString(),
+                Text = $"{x.FirstName} {x.LastName} ({x.Email})",
+            }).ToList();
 
-                    var customerFullName = _customerService.GetCustomerFullName(new Customer
-                    {
-                        Id = x.CreatedBy,
-                    });
-
-                    item.Id = x.Id;
-                    item.Name = customerFullName;
-                    item.Email = customerIdToCustomer[x.CreatedBy].Email;
-
-                    return item;
-                });
-
-                return items;
-            });
-
-            return model;
+            return list;
         }
 
-        public IssueAssignmentSearchModel PrepareIssueAssignmentSearchModel()
+        public List<SelectListItem> GetAssignmentsForAddComboBox(string text, IssueAssignmentType issueAssignmentType, int excludeAssignmentsFromIssueId)
         {
-            var model = new IssueAssignmentSearchModel();
-            return model;
-        }
+            var existingAssignmentsOfType = _issueService.GetAssignmentList(excludeAssignmentsFromIssueId, issueAssignmentType);
+            var existingAssignmentsOfTypeIds = existingAssignmentsOfType.Select(x => x.Id).ToList();
+            var assignments = _issueService.QuickSearchAssignments(text, issueAssignmentType, existingAssignmentsOfTypeIds);
 
-        public IssueAssignmentListModel PrepareIssueAssignmentListModel(IssueAssignmentSearchModel searchModel)
-        {
-            var assignmentList = _issueService.GetAssignmentList(searchModel.Page - 1, searchModel.PageSize);
-            var preload = GetAssignmentsInfoPreload(assignmentList.ToList());
-
-            var model = new IssueAssignmentListModel().PrepareToGrid(searchModel, assignmentList, () =>
+            var list = assignments.Select(x => new SelectListItem
             {
-                var items = assignmentList.Select(x =>
-                {
-                    var item = new IssueAssignmentGridItem();
+                Value = x.ObjectId.HasValue ? x.ObjectId.ToString() : string.Empty,
+                Text = x.Name,
+            }).ToList();
 
-                    item.Id = x.Id;
-                    item.ObjectId = x.ObjectId;
-
-                    switch (item.Type)
-                    {
-                        case IssueAssignmentType.Product:
-                            if (preload.Products.TryGetValue(item.Id, out var productInfo))
-                            {
-                                item.ProductInfo = productInfo;
-                            }
-                            break;
-                        default:
-                            throw new NotImplementedException();
-                    }
-
-                    return item;
-                });
-
-                return items;
-            });
-
-            return model;
-        }
-
-        private IssueAssignmentPreloadContainer GetAssignmentsInfoPreload(List<IssueAssignment> assignments)
-        {
-            var assignmentTypeToAssignments = assignments.ToLookup(x => x.AssignmentType);
-
-            var productsIds = assignmentTypeToAssignments[IssueAssignmentType.Product].Select(x => x.ObjectId.Value).ToList();
-            var productsInfo = GetProductAssignmentsInfo(productsIds);
-
-            var container = new IssueAssignmentPreloadContainer
-            {
-                Products = productsInfo,
-            };
-
-            return container;
-        }
-
-        private Dictionary<int, IssueProductAssignmentInfo> GetProductAssignmentsInfo(List<int> productsIds)
-        {
-            var productIdToProductInfo = _productService.GetProductsByIds(productsIds.ToArray()).ToDictionary(x => x.Id, y => new IssueProductAssignmentInfo
-            {
-                Name = y.Name,
-            });
-
-            return productIdToProductInfo;
+            return list;
         }
     }
 }

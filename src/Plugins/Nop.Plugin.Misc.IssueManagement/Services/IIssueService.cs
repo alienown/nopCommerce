@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Nop.Core;
 using Nop.Plugin.Misc.IssueManagement.Domain;
 
@@ -19,13 +19,17 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
 
         void DeleteIssue(int id);
 
-        IPagedList<IssuePersonInvolved> GetPersonInvolvedList(int pageIndex = 0, int pageSize = int.MaxValue, bool getOnlyTotalCount = false);
+        IPagedList<IssuePersonInvolved> GetPersonInvolvedList(int issueId, int pageIndex = 0, int pageSize = int.MaxValue, bool getOnlyTotalCount = false);
+
+        List<QuickSearchCustomerInfo> QuickSearchCustomers(string text, List<int> idsToExclude = null);
 
         void InsertPersonInvolved(IssuePersonInvolved issuePersonInvolved);
 
         void DeletePersonInvolved(int id);
 
-        IPagedList<IssueAssignment> GetAssignmentList(int pageIndex = 0, int pageSize = int.MaxValue, bool getOnlyTotalCount = false);
+        IPagedList<IssueAssignment> GetAssignmentList(int issueId, IssueAssignmentType? assignmentType, int pageIndex = 0, int pageSize = int.MaxValue, bool getOnlyTotalCount = false);
+
+        List<QuickSearchAssignmentInfo> QuickSearchAssignments(string text, IssueAssignmentType assignmentType, List<int> idsToExclude = null);
 
         void InsertAssignment(IssueAssignment issueAssignment);
 

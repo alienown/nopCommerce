@@ -3,12 +3,12 @@ using Nop.Web.Framework.Models;
 
 namespace Nop.Plugin.Misc.IssueManagement.Models
 {
-    public class IssueAssignmentGridItem : BaseNopEntityModel
+    public class IssueAssignmentsGridItem : BaseNopEntityModel
     {
         public int? ObjectId { get; set; }
 
         public IssueProductAssignmentInfo ProductInfo { get; set; }
 
-        public IssueAssignmentType Type { get; set; }
+        public IssueAssignmentType AssignmentType { get; set; }
     }
 }

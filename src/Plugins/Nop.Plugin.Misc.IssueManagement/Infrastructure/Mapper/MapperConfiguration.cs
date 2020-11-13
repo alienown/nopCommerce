@@ -13,7 +13,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Infrastructure.Mapper
                 .ForMember(entity => entity.Priority, options => options.DoNotAllowNull())
                 .ForMember(entity => entity.Status, options => options.DoNotAllowNull());
 
-            CreateMap<EditIssueModel, Issue>()
+            CreateMap<EditBasicInfoPanelModel, Issue>()
                 .ForMember(entity => entity.Priority, options => options.DoNotAllowNull())
                 .ForMember(entity => entity.Status, options => options.DoNotAllowNull());
 

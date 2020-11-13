@@ -8,7 +8,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Domain
     {
         public int? ObjectId { get; set; }
 
-        public int TaskId { get; set; }
+        public int IssueId { get; set; }
 
         public IssueAssignmentType AssignmentType { get; set; }
 

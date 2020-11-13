@@ -13,7 +13,7 @@
     var hideBasicInfoPanel = genericAttributeService.GetAttribute<bool>(workContext.CurrentCustomer, hideBasicInfoBlockAttributeName, defaultValue: true);
 }
 
-<form asp-controller="Issue" asp-action="Add" method="post">
+<form asp-action="Add" asp-controller="Issue" method="post">
     <div class="content-header clearfix">
         <h1 class="pull-left">
             @T("Plugins.Misc.IssueManagement.Add.AddNewIssue")
@@ -23,11 +23,11 @@
             </small>
         </h1>
         <div class="pull-right">
-            <button type="submit" name="save" class="btn bg-blue">
+            <button name="saveButton" type="submit" class="btn bg-blue">
                 <i class="fa fa-floppy-o"></i>
                 @T("Admin.Common.Save")
             </button>
-            <button type="submit" name="save-continue" class="btn bg-blue">
+            <button name="saveContinueButton" type="submit" class="btn bg-blue">
                 <i class="fa fa-floppy-o"></i>
                 @T("Admin.Common.SaveContinue")
             </button>
@@ -36,7 +36,7 @@
     <div class="content">
         <div class="form-horizontal">
             <nop-panels id="issue-panels">
-                <nop-panel asp-name="issue-basic-info"
+                <nop-panel asp-name="basicInfoPanel"
                            asp-icon="fa fa-info"
                            asp-title="@T("Plugins.Misc.IssueManagement.Add.BasicInfoPanel.Title")"
                            asp-hide-block-attribute-name="@hideBasicInfoBlockAttributeName"

@@ -1,0 +1,60 @@
+﻿@using Nop.Plugin.Misc.IssueManagement.Models
+@using Nop.Web.Framework.Models.DataTables
+@using Microsoft.AspNetCore.Routing
+
+@model EditIssuePersonsInvolvedPanelModel
+
+@{
+    var gridModel = new DataTablesModel
+    {
+        Name = "personsInvolvedGrid",
+        UrlRead = new DataUrl("IssuePersonInvolvedList", "Issue", new RouteValueDictionary(new { issueId = Model.PersonsInvolvedSearchModel.IssueId })),
+        UrlDelete = new DataUrl("DeletePersonInvolved", "Issue", null),
+        Length = Model.PersonsInvolvedSearchModel.PageSize,
+        LengthMenu = Model.PersonsInvolvedSearchModel.AvailablePageSizes,
+    };
+    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssuePersonsInvolvedGridItem.Email))
+    {
+        Title = T("Plugins.Misc.IssueManagement.Edit.PersonsInvolvedPanel.Grid.Columns.Email").Text,
+    });
+    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssuePersonsInvolvedGridItem.Name))
+    {
+        Title = T("Plugins.Misc.IssueManagement.Edit.PersonsInvolvedPanel.Grid.Columns.Name").Text,
+    });
+    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssuePersonsInvolvedGridItem.Id))
+    {
+        Title = T("Admin.Common.Delete").Text,
+        ClassName = NopColumnClassDefaults.Button,
+        Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
+        Width = "50"
+    });
+}
+
+<div class="panel-body">
+    <div class="subpanel">
+        @await Html.PartialAsync("Table", gridModel)
+    </div>
+    <div class="panel panel-default no-margin">
+        <div class="panel-heading">
+            @T("Plugins.Misc.IssueManagement.Edit.PersonsInvolvedPanel.AddPersonsInvolvedSubPanel.Title")
+        </div>
+        <div class="panel-body">
+            <div class="form-group">
+                <div class="col-md-3">
+                    <nop-label asp-for="CustomerId" />
+                </div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(x => x.CustomerId)
+                    <span asp-validation-for="CustomerId"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-9 col-md-offset-3">
+                    <button type="button" id="addPersonInvolved" class="btn btn-primary" disabled>
+                        @T("Plugins.Misc.IssueManagement.Edit.PersonsInvolvedPanel.AddPersonsInvolvedSubPanel.AddPersonButton")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

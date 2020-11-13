@@ -1,0 +1,342 @@
+﻿@using Nop.Plugin.Misc.IssueManagement.Models
+@using Nop.Plugin.Misc.IssueManagement.Domain
+
+@model EditIssueModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = T("Plugins.Misc.IssueManagement.Edit.Title").Text;
+    Html.SetActiveMenuItemSystemName("New issue");
+}
+
+@{
+    const string hideBasicInfoBlockAttributeName = "Plugins.Misc.IssueManagement.Edit.BasicInfoPanel";
+    var hideBasicInfoPanel = genericAttributeService.GetAttribute<bool>(workContext.CurrentCustomer, hideBasicInfoBlockAttributeName, defaultValue: true);
+
+    const string hidePersonsInvolvedBlockAttributeName = "Plugins.Misc.IssueManagement.Edit.PersonsInvolvedPanel";
+    var hidePersonsInvolvedPanel = genericAttributeService.GetAttribute<bool>(workContext.CurrentCustomer, hidePersonsInvolvedBlockAttributeName, defaultValue: true);
+
+    const string hideAssignmentsBlockAttributeName = "Plugins.Misc.IssueManagement.Edit.AssignmentsPanel";
+    var hideAssignmentsPanel = genericAttributeService.GetAttribute<bool>(workContext.CurrentCustomer, hideAssignmentsBlockAttributeName, defaultValue: true);
+}
+
+<div class="content-header clearfix">
+    <h1 class="pull-left">
+        @($"{T("Plugins.Misc.IssueManagement.Edit.Title").Text} {Model.BasicInfoPanelModel.Name}")
+        <small>
+            <i class="fa fa-arrow-circle-left"></i>
+            <a asp-action="List">@T("Plugins.Misc.IssueManagement.Edit.ToIssueList")</a>
+        </small>
+    </h1>
+    <div class="pull-right">
+        <span id="issue-delete" class="btn bg-red">
+            <i class="fa fa-trash-o"></i>
+            @T("Admin.Common.Delete")
+        </span>
+    </div>
+</div>
+<div class="content">
+    <div class="form-horizontal">
+        <nop-panels id="issue-panels">
+            <nop-panel asp-name="basicInfoPanel"
+                       asp-icon="fa fa-info"
+                       asp-title="@T("Plugins.Misc.IssueManagement.Edit.BasicInfoPanel.Title")"
+                       asp-hide-block-attribute-name="@hideBasicInfoBlockAttributeName"
+                       asp-hide="@hideBasicInfoPanel"
+                       asp-advanced="false">
+                <div class="panel-body">
+                    <div id="basicInfoFormContainer">
+                        @await Html.PartialAsync("~/Plugins/Misc.IssueManagement/Views/Index/_BasicInfo.cshtml", Model.BasicInfoPanelModel)
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-9 col-md-offset-3">
+                            <button type="button" id="saveBasicInfo" class="btn btn-primary">
+                                @T("Plugins.Misc.IssueManagement.Edit.BasicInfoPanel.SaveButton")
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </nop-panel>
+            <nop-panel asp-name="personsInvolvedPanel"
+                       asp-icon="fa fa-users"
+                       asp-title="@T("Plugins.Misc.IssueManagement.Edit.PersonsInvolvedPanel.Title")"
+                       asp-hide-block-attribute-name="@hidePersonsInvolvedBlockAttributeName"
+                       asp-hide="@hidePersonsInvolvedPanel"
+                       asp-advanced="false">
+                @await Html.PartialAsync("~/Plugins/Misc.IssueManagement/Views/Index/_PersonsInvolved.cshtml", Model.PersonsInvolvedPanelModel)
+            </nop-panel>
+            <nop-panel asp-name="assignmentsPanel"
+                       asp-icon="fa fa-sitemap"
+                       asp-title="@T("Plugins.Misc.IssueManagement.Edit.AssignmentsPanel.Title")"
+                       asp-hide-block-attribute-name="@hideAssignmentsBlockAttributeName"
+                       asp-hide="@hideAssignmentsPanel"
+                       asp-advanced="false">
+                @await Html.PartialAsync("~/Plugins/Misc.IssueManagement/Views/Index/_Assignments.cshtml", Model.AssignmentsPanelModel)
+            </nop-panel>
+        </nop-panels>
+    </div>
+</div>
+
+<nop-delete-confirmation asp-model-id="@Model.Id" asp-button-id="issue-delete" />
+
+<script>
+    var basicInfoScope = function () {
+        var self = {};
+
+        function serializeForm() {
+            var data = {};
+
+            data.Id = '@Model.Id';
+            data.name = $('#basicInfoPanel #Name').val();
+            data.description = $('#basicInfoPanel #Description').val();
+            data.deadline = $('#basicInfoPanel #Deadline').val();
+            data.priority = $('#basicInfoPanel #Priority').val();
+            data.status = $('#basicInfoPanel #Status').val();
+
+            return data;
+        }
+
+        function saveBasicInfo() {
+            var saveButton = $('#basicInfoPanel #saveBasicInfo');
+            saveButton.prop('disabled', true);
+            var data = serializeForm();
+
+            $.ajax({
+                cache: false,
+                type: "POST",
+                url: '@Url.Action("SaveBasicInfo", "Issue")',
+                data: data,
+                success: function (data) {
+                    if (data.Result) {
+                        window.location.reload();
+                    } else {
+                        $('#basicInfoFormContainer').html(data);
+                        var form = $('#basicInfoForm');
+                        form.unbind();
+                        form.data('validator', null);
+                        $.validator.unobtrusive.parse('#basicInfoForm');
+                        form.validate(form.data('unobtrusiveValidation').options);
+                    }
+
+                    saveButton.prop('disabled', false);
+                },
+                error: function () {
+                    saveButton.prop('disabled', false);
+                }
+            });
+        }
+
+        function bindEvents() {
+            $('#saveBasicInfo').on('click', saveBasicInfo);
+        }
+
+        self.initialize = function () {
+            bindEvents();
+        }
+
+        return self;
+    }();
+
+    var assignmentsScope = function () {
+        var self = {};
+
+        function onAddAssignmentButtonClick() {
+            var addAssignmentButton = $('#addAssignment');
+            var comboBox = $('#assignmentsPanel #ObjectId').data('kendoComboBox');
+            var assignmentType = $('#assignmentsPanel #AssignmentType').val();
+            comboBox.enable(false);
+            addAssignmentButton.prop('disabled', true);
+            var data = {
+                objectId: comboBox.value(),
+                issueId: '@Model.Id',
+                assignmentType: assignmentType,
+            };
+
+            $.ajax({
+                cache: false,
+                type: "POST",
+                url: '@Url.Action("AddAssignment", "Issue")',
+                data: data,
+                success: function (data) {
+                    if (data.Result) {
+                        updateTable('#assignmentsGrid');
+                        comboBox.value(null);
+                        comboBox.enable(true);
+                    } else {
+                        display_nop_error(data);
+                        addAssignmentButton.prop('disabled', false);
+                    }
+                },
+                error: function () {
+                    comboBox.enable(true);
+                    addAssignmentButton.prop('disabled', false);
+                }
+            });
+        }
+
+        function onAssignmentComboBoxChange(e) {
+            var addAssignmentButton = $('#addAssignment');
+            if (e.sender.selectedIndex === -1) {
+                addAssignmentButton.prop('disabled', true);
+            } else {
+                addAssignmentButton.prop('disabled', false);
+            }
+        }
+
+        function createAssignmentsComboBox() {
+            $('#assignmentsPanel #ObjectId').kendoComboBox({
+                placeholder: '@T("Plugins.Misc.IssueManagement.Edit.AssignmentsPanel.AddAssignmentsSubPanel.AddAssignmentComboBox.Placeholder")',
+                dataTextField: 'Text',
+                dataValueField: 'Value',
+                minLength: 3,
+                autoBind: false,
+                filter: 'contains',
+                change: onAssignmentComboBoxChange,
+                dataSource: {
+                    serverFiltering: true,
+                    transport: {
+                        read: {
+                            type: 'POST',
+                            url: '@Url.Action("GetAssignmentsForAddComboBox", "Issue")',
+                            dataType: 'json',
+                            data: function (e) {
+                                var assignmentType = $('#assignmentsPanel #AssignmentType').val();
+
+                                var data = {
+                                    assignmentType: assignmentType,
+                                    issueId: '@Model.Id',
+                                };
+
+                                if (e.filter && e.filter.filters && e.filter.filters[0]) {
+                                    data.text = e.filter.filters[0].value;
+                                }
+
+                                return data;
+                            },
+                        }
+                    }
+                }
+            });
+        }
+
+        function bindEvents() {
+            $('#addAssignment').on('click', onAddAssignmentButtonClick);
+        }
+
+        self.renderAssignmentInfoTemplate = function (data, type, row, meta) {
+            var template = '';
+
+            switch (row.AssignmentType) {
+                case @((byte)IssueAssignmentType.Product):
+                    template += '<span>' + row.ProductInfo.Name + '</span>';
+                    break;
+                default:
+                    break;
+            }
+
+            return template;
+        }
+
+        self.initialize = function () {
+            createAssignmentsComboBox();
+            bindEvents();
+        }
+
+        return self;
+    }();
+
+    var personsInvolvedScope = function () {
+        var self = {};
+
+        function onAddPersonInvolvedButtonClick() {
+            var addPersonInvolvedButton = $('#addPersonInvolved');
+            var comboBox = $('#personsInvolvedPanel #CustomerId').data('kendoComboBox');
+            comboBox.enable(false);
+            addPersonInvolvedButton.prop('disabled', true);
+            var data = {
+                customerId: comboBox.value(),
+                issueId: '@Model.Id',
+            };
+
+            $.ajax({
+                cache: false,
+                type: "POST",
+                url: '@Url.Action("AddPersonInvolved", "Issue")',
+                data: data,
+                success: function (data) {
+                    if (data.Result) {
+                        updateTable('#personsInvolvedGrid');
+                        comboBox.value(null);
+                        comboBox.enable(true);
+                    } else {
+                        display_nop_error(data);
+                        addPersonInvolvedButton.prop('disabled', false);
+                    }
+                },
+                error: function () {
+                    comboBox.enable(true);
+                    addPersonInvolvedButton.prop('disabled', false);
+                }
+            });
+        }
+
+        function onPersonsInvolvedComboBoxChange(e) {
+            var addPersonInvolvedButton = $('#addPersonInvolved');
+            if (e.sender.selectedIndex === -1) {
+                addPersonInvolvedButton.prop('disabled', true);
+            } else {
+                addPersonInvolvedButton.prop('disabled', false);
+            }
+        }
+
+        function createPersonsInvolvedComboBox() {
+            $('#personsInvolvedPanel #CustomerId').kendoComboBox({
+                placeholder: '@T("Plugins.Misc.IssueManagement.Edit.PersonsInvolvedPanel.AddPersonsInvolvedSubPanel.AddPersonComboBox.Placeholder")',
+                dataTextField: 'Text',
+                dataValueField: 'Value',
+                minLength: 3,
+                autoBind: false,
+                filter: 'contains',
+                change: onPersonsInvolvedComboBoxChange,
+                dataSource: {
+                    serverFiltering: true,
+                    transport: {
+                        read: {
+                            type: 'POST',
+                            url: '@Url.Action("GetPersonsInvolvedForAddComboBox", "Issue")',
+                            dataType: 'json',
+                            data: function (e) {
+                                var data = {
+                                    issueId: '@Model.Id',
+                                };
+
+                                if (e.filter && e.filter.filters && e.filter.filters[0]) {
+                                    data.text = e.filter.filters[0].value;
+                                }
+
+                                return data;
+                            },
+                        }
+                    }
+                }
+            });
+        }
+
+        function bindEvents() {
+            $('#addPersonInvolved').on('click', onAddPersonInvolvedButtonClick);
+        }
+
+        self.initialize = function () {
+            createPersonsInvolvedComboBox();
+            bindEvents();
+        }
+
+        return self;
+    }();
+
+    $(document).ready(function () {
+        basicInfoScope.initialize();
+        personsInvolvedScope.initialize();
+        assignmentsScope.initialize();
+    });
+</script>

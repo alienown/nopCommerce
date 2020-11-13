@@ -1,4 +1,6 @@
-﻿using Nop.Plugin.Misc.IssueManagement.Domain;
+﻿using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Nop.Plugin.Misc.IssueManagement.Domain;
 using Nop.Plugin.Misc.IssueManagement.Models;
 
 namespace Nop.Plugin.Misc.IssueManagement.Factories
@@ -9,16 +11,18 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
 
         EditIssueModel PrepareEditIssueModel(EditIssueModel model, Issue entity);
 
+        EditBasicInfoPanelModel PrepareEditBasicInfoPanelModel(EditBasicInfoPanelModel model, Issue entity);
+
         IssueSearchModel PrepareIssueSearchModel();
 
         IssueListModel PrepareIssueListModel(IssueSearchModel model);
 
-        IssuePersonInvolvedListModel PrepareIssuePersonInvolvedListModel(IssuePersonInvolvedSearchModel searchModel);
+        IssuePersonInvolvedListModel PrepareIssuePersonInvolvedListModel(IssuePersonsInvolvedSearchModel searchModel);
 
-        IssuePersonInvolvedSearchModel PrepareIssuePersonInvolvedSearchModel();
+        IssueAssignmentListModel PrepareIssueAssignmentListModel(IssueAssignmentsSearchModel searchModel);
 
-        IssueAssignmentListModel PrepareIssueAssignmentListModel(IssueAssignmentSearchModel searchModel);
+        List<SelectListItem> GetPersonsInvolvedForAddComboBox(string text, int excludePersonsFromIssueId);
 
-        IssueAssignmentSearchModel PrepareIssueAssignmentSearchModel();
+        List<SelectListItem> GetAssignmentsForAddComboBox(string text, IssueAssignmentType issueAssignmentType, int excludeAssignmentsFromIssueId);
     }
 }

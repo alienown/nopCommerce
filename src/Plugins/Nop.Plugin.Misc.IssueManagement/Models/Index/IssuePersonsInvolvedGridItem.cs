@@ -2,7 +2,7 @@
 
 namespace Nop.Plugin.Misc.IssueManagement.Models
 {
-    public class IssuePersonInvolvedGridItem : BaseNopEntityModel
+    public class IssuePersonsInvolvedGridItem : BaseNopEntityModel
     {
         public string Name { get; set; }
 
