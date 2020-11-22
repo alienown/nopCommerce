@@ -9,5 +9,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Models
         public EditIssuePersonsInvolvedPanelModel PersonsInvolvedPanelModel { get; set; }
 
         public EditIssueAssignmentsPanelModel AssignmentsPanelModel { get; set; }
+
+        public IssueHistoryPanelModel HistoryPanelModel { get; set; }
     }
 }

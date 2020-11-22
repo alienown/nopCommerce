@@ -1,6 +1,6 @@
 ﻿namespace Nop.Plugin.Misc.IssueManagement.Models
 {
-    public class IssueProductAssignmentInfo
+    public class IssueProductAssignmentDetails : IssueAssignmentDetails
     {
         public string Name { get; set; }
     }

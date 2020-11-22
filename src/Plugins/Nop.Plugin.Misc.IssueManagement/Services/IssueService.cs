@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Newtonsoft.Json;
 using Nop.Core;
 using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Common;
@@ -93,10 +94,23 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
         public void InsertIssue(Issue issue)
         {
             var now = DateTime.UtcNow;
-            issue.CreatedBy = _workContext.CurrentCustomer.Id;
+            var currentUserId = _workContext.CurrentCustomer.Id;
+            issue.CreatedBy = currentUserId;
             issue.CreatedAt = now;
             issue.LastModified = now;
+
             _issueRepository.Insert(issue);
+            var personInvolved = new IssuePersonInvolved
+            {
+                IssueId = issue.Id,
+                CustomerId = currentUserId,
+                CreatedBy = currentUserId,
+                CreatedAt = now,
+            };
+
+            _issuePersonsInvolvedRepository.Insert(personInvolved);
+            _issueHistoryRepository.Insert(CreateIssueHistoryEntry(issue.Id, currentUserId.ToString(), null,
+                IssueChangeType.PersonInvolved, now, currentUserId));
         }
 
         public void UpdateIssue(Issue issue)
@@ -233,10 +247,45 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
                 issueAssignment.CreatedAt = now;
                 _issueAssignmentRepository.Insert(issueAssignment);
 
-                var historyEntry = CreateIssueHistoryEntry(issueAssignment.IssueId, issueAssignment.ObjectId.ToString(), null,
+                var newValue = JsonConvert.SerializeObject(GetIssueHistoryAssignmentValue(issueAssignment));
+                var historyEntry = CreateIssueHistoryEntry(issueAssignment.IssueId, newValue, null,
                     IssueChangeType.Assignment, now, _workContext.CurrentCustomer.Id);
                 _issueHistoryRepository.Insert(historyEntry);
             }
+        }
+
+        private IssueHistoryAssignmentValue GetIssueHistoryAssignmentValue(IssueAssignment issueAssignment)
+        {
+            var value = new IssueHistoryAssignmentValue
+            {
+                ObjectId = issueAssignment.ObjectId,
+                Name = GetAssignmentObjectName(issueAssignment.ObjectId, issueAssignment.AssignmentType),
+                AssignmentType = issueAssignment.AssignmentType,
+            };
+
+            return value;
+        }
+
+        private string GetAssignmentObjectName(int objectId, IssueAssignmentType assignmentType)
+        {
+            var name = string.Empty;
+
+            switch (assignmentType)
+            {
+                case IssueAssignmentType.Product:
+                    name = GetProductName(objectId);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+
+            return name;
+        }
+
+        private string GetProductName(int productId)
+        {
+            var product = _productService.GetProductById(productId);
+            return product.Name;
         }
 
         public void DeleteAssignment(int id)
@@ -245,7 +294,8 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
             if (issueAssignment != null)
             {
                 _issueAssignmentRepository.Delete(issueAssignment);
-                var historyEntry = CreateIssueHistoryEntry(issueAssignment.IssueId, null, issueAssignment.ObjectId.ToString(),
+                var oldValue = JsonConvert.SerializeObject(GetIssueHistoryAssignmentValue(issueAssignment));
+                var historyEntry = CreateIssueHistoryEntry(issueAssignment.IssueId, null, oldValue,
                     IssueChangeType.Assignment, DateTime.UtcNow, _workContext.CurrentCustomer.Id);
                 _issueHistoryRepository.Insert(historyEntry);
             }
@@ -272,13 +322,13 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
 
             if (modifiedIssue.Priority != originalIssue.Priority)
             {
-                result.Add(CreateIssueHistoryEntry(modifiedIssue.Id, modifiedIssue.Priority.ToString(), originalIssue.Priority.ToString(),
+                result.Add(CreateIssueHistoryEntry(modifiedIssue.Id, ((byte)modifiedIssue.Priority).ToString(), ((byte)originalIssue.Priority).ToString(),
                     IssueChangeType.Priority, now, customerId));
             }
 
             if (modifiedIssue.Status != originalIssue.Status)
             {
-                result.Add(CreateIssueHistoryEntry(modifiedIssue.Id, modifiedIssue.Status.ToString(), originalIssue.Status.ToString(),
+                result.Add(CreateIssueHistoryEntry(modifiedIssue.Id, ((byte)modifiedIssue.Status).ToString(), ((byte)originalIssue.Status).ToString(),
                     IssueChangeType.Status, now, customerId));
             }
 
@@ -334,6 +384,23 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
             }).ToList();
 
             return list;
+        }
+
+        public IPagedList<IssueHistory> GetHistoryList(int issueId, int pageIndex = 0, int pageSize = int.MaxValue, bool getOnlyTotalCount = false)
+        {
+            var list = _issueHistoryRepository.GetAllPaged(query =>
+            {
+                query = query.Where(x => x.IssueId == issueId);
+                return query;
+            }, pageIndex: pageIndex, pageSize: pageSize, getOnlyTotalCount: getOnlyTotalCount);
+
+            return list;
+        }
+
+        public List<IssueAssignment> GetAssignmentsByIds(List<int> assignmentsIds)
+        {
+            var result = _issueAssignmentRepository.GetByIds(assignmentsIds).ToList();
+            return result;
         }
     }
 }

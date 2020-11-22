@@ -1,0 +1,35 @@
+﻿@using Nop.Plugin.Misc.IssueManagement.Models
+@using Nop.Web.Framework.Models.DataTables
+@using Microsoft.AspNetCore.Routing
+
+@model IssueHistoryPanelModel
+
+@{
+    var gridModel = new DataTablesModel
+    {
+        Name = "historyGrid",
+        UrlRead = new DataUrl("IssueHistoryList", "Issue", new RouteValueDictionary(new { issueId = Model.HistorySearchModel.IssueId })),
+        Length = Model.HistorySearchModel.PageSize,
+        LengthMenu = Model.HistorySearchModel.AvailablePageSizes,
+    };
+    gridModel.ColumnCollection.Add(new ColumnProperty("Change")
+    {
+        Title = T("Plugins.Misc.IssueManagement.Edit.Historypanel.Grid.Columns.Change").Text,
+        Render = new RenderCustom("historyScope.renderChange"),
+    });
+    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueHistoryGridItem.ModifiedByFullName))
+    {
+        Title = T("Plugins.Misc.IssueManagement.Edit.Historypanel.Grid.Columns.ChangedBy").Text,
+        Width = "300",
+    });
+    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueHistoryGridItem.ModifiedAt))
+    {
+        Title = T("Plugins.Misc.IssueManagement.Edit.Historypanel.Grid.Columns.ChangedOn").Text,
+        Width = "170",
+        Render = new RenderDate(),
+    });
+}
+
+<div class="panel-body">
+    @await Html.PartialAsync("Table", gridModel)
+</div>

@@ -34,5 +34,9 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
         void InsertAssignment(IssueAssignment issueAssignment);
 
         void DeleteAssignment(int id);
+
+        IPagedList<IssueHistory> GetHistoryList(int issueId, int pageIndex = 0, int pageSize = int.MaxValue, bool getOnlyTotalCount = false);
+
+        List<IssueAssignment> GetAssignmentsByIds(List<int> assignmentsIds);
     }
 }

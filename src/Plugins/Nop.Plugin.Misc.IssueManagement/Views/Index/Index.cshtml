@@ -18,6 +18,9 @@
 
     const string hideAssignmentsBlockAttributeName = "Plugins.Misc.IssueManagement.Edit.AssignmentsPanel";
     var hideAssignmentsPanel = genericAttributeService.GetAttribute<bool>(workContext.CurrentCustomer, hideAssignmentsBlockAttributeName, defaultValue: true);
+
+    const string hideHistoryBlockAttributeName = "Plugins.Misc.IssueManagement.Edit.HistoryPanel";
+    var hideHistoryPanel = genericAttributeService.GetAttribute<bool>(workContext.CurrentCustomer, hideHistoryBlockAttributeName, defaultValue: true);
 }
 
 <div class="content-header clearfix">
@@ -72,6 +75,14 @@
                        asp-hide="@hideAssignmentsPanel"
                        asp-advanced="false">
                 @await Html.PartialAsync("~/Plugins/Misc.IssueManagement/Views/Index/_Assignments.cshtml", Model.AssignmentsPanelModel)
+            </nop-panel>
+            <nop-panel asp-name="historyPanel"
+                       asp-icon="fa fa-list"
+                       asp-title="@T("Plugins.Misc.IssueManagement.Edit.HistoryPanel.Title")"
+                       asp-hide-block-attribute-name="@hideHistoryBlockAttributeName"
+                       asp-hide="@hideHistoryPanel"
+                       asp-advanced="false">
+                @await Html.PartialAsync("~/Plugins/Misc.IssueManagement/Views/Index/_History.cshtml", Model.HistoryPanelModel)
             </nop-panel>
         </nop-panels>
     </div>
@@ -162,6 +173,7 @@
                         updateTable('#assignmentsGrid');
                         comboBox.value(null);
                         comboBox.enable(true);
+                        updateTable('#historyGrid');
                     } else {
                         display_nop_error(data);
                         addAssignmentButton.prop('disabled', false);
@@ -223,12 +235,21 @@
             $('#addAssignment').on('click', onAddAssignmentButtonClick);
         }
 
+        function renderProductAssignment(row) {
+            var productUrl = '@Url.Action("Edit", "Product", new { id = "__ID__", area = "Admin" })';
+            productUrl = productUrl.replace("__ID__", row.ObjectId);
+
+            var template = '<i class="mr-1 fa fa-book" title="@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueAssignmentType.Product")"></i>' +
+                '<a href="' + productUrl + '">' + row.Details.Name + '</a>';
+            return template;
+        }
+
         self.renderAssignmentInfoTemplate = function (data, type, row, meta) {
             var template = '';
 
             switch (row.AssignmentType) {
                 case @((byte)IssueAssignmentType.Product):
-                    template += '<span>' + row.ProductInfo.Name + '</span>';
+                    template += renderProductAssignment(row);
                     break;
                 default:
                     break;
@@ -268,6 +289,7 @@
                         updateTable('#personsInvolvedGrid');
                         comboBox.value(null);
                         comboBox.enable(true);
+                        updateTable('#historyGrid');
                     } else {
                         display_nop_error(data);
                         addPersonInvolvedButton.prop('disabled', false);
@@ -329,6 +351,164 @@
         self.initialize = function () {
             createPersonsInvolvedComboBox();
             bindEvents();
+        }
+
+        return self;
+    }();
+
+    var historyScope = function () {
+        var self = {};
+
+        function getAssignmentTypeName(assignmentType) {
+            var name = '';
+
+            switch (assignmentType) {
+                case @((byte)IssueAssignmentType.Product):
+                    name = '@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueAssignmentType.Product")';
+                    break;
+                default:
+                    break;
+            }
+
+            return name.toLowerCase();
+        }
+
+        function renderAssignmentChange(row) {
+            var changeDetails = row.ChangeDetails;
+            var assignmentTypeName = getAssignmentTypeName(changeDetails.AssignmentType);
+            var template = '';
+
+            if (changeDetails.NewValue) {
+                template += '@T("Plugins.Misc.IssueManagement.Edit.Historypanel.Grid.Columns.Change.Added")';
+            } else {
+                template += '@T("Plugins.Misc.IssueManagement.Edit.Historypanel.Grid.Columns.Change.Removed")';
+            }
+
+            template += ' ' + assignmentTypeName + ' ' + changeDetails.Name;
+            return template;
+        }
+
+        function renderPersonInvolvedChange(row) {
+            var changeDetails = row.ChangeDetails;
+            var template = '';
+
+            if (changeDetails.NewValue) {
+                template += '@T("Plugins.Misc.IssueManagement.Edit.Historypanel.Grid.Columns.Change.Added")';
+            } else {
+                template += '@T("Plugins.Misc.IssueManagement.Edit.Historypanel.Grid.Columns.Change.Removed")';
+            }
+
+            template += ' ' + changeDetails.FullName + ' (' + changeDetails.Email + ')';
+            return template;
+        }
+
+        function getBasicInfoChangeTypeName(changeType) {
+            var name = '';
+
+            switch (changeType) {
+                case @((byte)IssueChangeType.Name):
+                    name = '@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueChangeType.Name")';
+                    break;
+                case @((byte)IssueChangeType.Description):
+                    name = '@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueChangeType.Description")';
+                    break;
+                case @((byte)IssueChangeType.Deadline):
+                    name = '@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueChangeType.Deadline")';
+                    break;
+                case @((byte)IssueChangeType.Priority):
+                    name = '@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueChangeType.Priority")';
+                    break;
+                case @((byte)IssueChangeType.Status):
+                    name = '@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueChangeType.Status")';
+                    break;
+                default:
+                    break;
+            }
+
+            return name.toLowerCase();
+        }
+
+        function getPriorityName(priority) {
+            var name = '';
+            switch (priority) {
+                case '@((byte)IssuePriority.Low)':
+                    name = '@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssuePriority.Low")';
+                    break;
+                case '@((byte)IssuePriority.Normal)':
+                    name = '@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssuePriority.Normal")';
+                    break;
+                case '@((byte)IssuePriority.Important)':
+                    name = '@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssuePriority.Important")';
+                    break;
+                case '@((byte)IssuePriority.Urgent)':
+                    name = '@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssuePriority.Urgent")';
+                    break;
+                case '@((byte)IssuePriority.Critical)':
+                    name = '@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssuePriority.Critical")';
+                    break;
+                default:
+                    break;
+            }
+
+            return name;
+        }
+
+        function getStatusName(status) {
+            var name = '';
+            switch (status) {
+                case '@((byte)IssueStatus.Closed)':
+                    name = '@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueStatus.Closed")';
+                    break;
+                case '@((byte)IssueStatus.InProgress)':
+                    name = '@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueStatus.InProgress")';
+                    break;
+                case '@((byte)IssueStatus.New)':
+                    name = '@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueStatus.New")';
+                    break;
+                default:
+                    break;
+            }
+
+            return name;
+        }
+
+        function renderBasicInfoChange(row) {
+            var changeDetails = row.ChangeDetails;
+            var changeTypeName = getBasicInfoChangeTypeName(row.ChangeType);
+
+            switch (row.ChangeType) {
+                case @((byte)IssueChangeType.Priority):
+                    changeDetails.NewValue = getPriorityName(changeDetails.NewValue);
+                    changeDetails.OldValue = getPriorityName(changeDetails.OldValue);
+                    break;
+                case @((byte)IssueChangeType.Status):
+                    changeDetails.NewValue = getStatusName(changeDetails.NewValue);
+                    changeDetails.OldValue = getStatusName(changeDetails.OldValue);
+                    break;
+            }
+
+            var template = '@T("Plugins.Misc.IssueManagement.Edit.Historypanel.Grid.Columns.Change.Changed")' + ' ' + changeTypeName + ' ' +
+                '@T("Plugins.Misc.IssueManagement.Edit.Historypanel.Grid.Columns.Change.From")' + ' "' + changeDetails.OldValue + '" ' +
+                '@T("Plugins.Misc.IssueManagement.Edit.Historypanel.Grid.Columns.Change.To")' + ' "' + changeDetails.NewValue + '"';
+            return template;
+        }
+
+        self.renderChange = function (data, type, row, meta) {
+            var template = '';
+
+            switch (row.ChangeType) {
+                case @((byte)IssueChangeType.Assignment):
+                    template = renderAssignmentChange(row);
+                    break;
+                case @((byte)IssueChangeType.PersonInvolved):
+                    template = renderPersonInvolvedChange(row);
+                    break;
+                default:
+                    template = renderBasicInfoChange(row);
+                    break;
+            }
+
+            return template;
         }
 
         return self;

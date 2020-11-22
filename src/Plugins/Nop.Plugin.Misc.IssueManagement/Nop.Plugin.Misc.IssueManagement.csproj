@@ -69,6 +69,9 @@
     <None Update="Views\Add\_BasicInfo.cshtml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Views\Index\_History.cshtml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Views\Index\_PersonsInvolved.cshtml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

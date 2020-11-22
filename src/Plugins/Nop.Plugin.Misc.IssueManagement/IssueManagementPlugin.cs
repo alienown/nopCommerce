@@ -76,6 +76,15 @@ namespace Nop.Plugin.Misc.IssueManagement
                 ["Plugins.Misc.IssueManagement.Edit.AssignmentsPanel.AddAssignmentsSubPanel.AssignmentType"] = "Type",
                 ["Plugins.Misc.IssueManagement.Edit.AssignmentsPanel.AddAssignmentsSubPanel.AddAssignmentButton"] = "Add assignment",
                 ["Plugins.Misc.IssueManagement.Edit.AssignmentsPanel.AddAssignmentsSubPanel.AddAssignmentComboBox.Placeholder"] = "Please type in at least 3 letters...",
+                ["Plugins.Misc.IssueManagement.Edit.HistoryPanel.Title"] = "History",
+                ["Plugins.Misc.IssueManagement.Edit.Historypanel.Grid.Columns.Change"] = "Change",
+                ["Plugins.Misc.IssueManagement.Edit.Historypanel.Grid.Columns.ChangedBy"] = "Changed by",
+                ["Plugins.Misc.IssueManagement.Edit.Historypanel.Grid.Columns.ChangedOn"] = "Changed on",
+                ["Plugins.Misc.IssueManagement.Edit.Historypanel.Grid.Columns.Change.Added"] = "Added",
+                ["Plugins.Misc.IssueManagement.Edit.Historypanel.Grid.Columns.Change.Removed"] = "Removed",
+                ["Plugins.Misc.IssueManagement.Edit.Historypanel.Grid.Columns.Change.Changed"] = "Changed",
+                ["Plugins.Misc.IssueManagement.Edit.Historypanel.Grid.Columns.Change.From"] = "from",
+                ["Plugins.Misc.IssueManagement.Edit.Historypanel.Grid.Columns.Change.To"] = "to",
                 ["Plugins.Misc.IssueManagement.List.Title"] = "All issues",
                 ["Plugins.Misc.IssueManagement.List.Issues"] = "Issues",
                 ["Plugins.Misc.IssueManagement.List.Grid.Columns.Name"] = "Name",
@@ -98,6 +107,12 @@ namespace Nop.Plugin.Misc.IssueManagement
                 ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueStatus.New"] = "New",
                 ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueStatus.InProgress"] = "In progress",
                 ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueStatus.Closed"] = "Closed",
+                ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueAssignmentType.Product"] = "Product",
+                ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueChangeType.Name"] = "Name",
+                ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueChangeType.Description"] = "Description",
+                ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueChangeType.Deadline"] = "Deadline",
+                ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueChangeType.Priority"] = "Priority",
+                ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueChangeType.Status"] = "Status",
             });
 
             base.Install();

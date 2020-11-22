@@ -1,6 +1,5 @@
 ﻿@using Nop.Plugin.Misc.IssueManagement.Models
 @using Nop.Web.Framework.Models.DataTables
-@using Nop.Plugin.Misc.IssueManagement.Domain
 
 @model IssueSearchModel
 
@@ -30,13 +29,13 @@
     {
         Title = T("Plugins.Misc.IssueManagement.List.Grid.Columns.Status").Text,
         Width = "100",
-        Render = new RenderCustom("renderIssueStatus"),
+        Render = new RenderCustom("gridScope.renderIssueStatus"),
     });
     gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.PriorityDisplay))
     {
         Title = T("Plugins.Misc.IssueManagement.List.Grid.Columns.Priority").Text,
         Width = "100",
-        Render = new RenderCustom("renderIssuePriority"),
+        Render = new RenderCustom("gridScope.renderIssuePriority"),
     });
     gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.Deadline))
     {
@@ -46,7 +45,8 @@
     });
     gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.CreatedBy))
     {
-        Title = T("Plugins.Misc.IssueManagement.List.Grid.Columns.CreatedBy").Text
+        Title = T("Plugins.Misc.IssueManagement.List.Grid.Columns.CreatedBy").Text,
+        Width = "300",
     });
     gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueGridItemModel.CreatedAt))
     {
@@ -70,51 +70,3 @@
 }
 
 @await Html.PartialAsync("Table", gridModel)
-
-<script>
-    function renderIssuePriority(data, type, row, meta) {
-        var color;
-        switch (row.Priority) {
-            case @((byte)IssuePriority.Low):
-                color = 'gray';
-                break;
-            case @((byte)IssuePriority.Normal):
-                color = 'blue';
-                break;
-            case @((byte)IssuePriority.Important):
-                color = 'yellow';
-                break;
-            case @((byte)IssuePriority.Urgent):
-                color = 'lightCoral';
-                break;
-            case @((byte)IssuePriority.Critical):
-                color = 'red';
-                break;
-            default:
-                color = '';
-                break;
-        }
-
-        return '<span class="grid-report-item ' + color + '">' + data + '</span >';
-    }
-
-   function renderIssueStatus(data, type, row, meta) {
-       var color;
-       switch (row.Status) {
-            case @((byte)IssueStatus.Closed):
-                color = 'green';
-                break;
-            case @((byte)IssueStatus.InProgress):
-                color = 'blue';
-                break;
-            case @((byte)IssueStatus.New):
-                color = 'gray';
-                break;
-            default:
-                color = '';
-                break;
-        }
-
-        return '<span class="grid-report-item ' + color + '">' + data + '</span >';
-    }
-</script>

@@ -24,5 +24,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
         List<SelectListItem> GetPersonsInvolvedForAddComboBox(string text, int excludePersonsFromIssueId);
 
         List<SelectListItem> GetAssignmentsForAddComboBox(string text, IssueAssignmentType issueAssignmentType, int excludeAssignmentsFromIssueId);
+
+        IssueHistoryListModel PrepareIssueHistoryListModel(IssueHistorySearchModel searchModel);
     }
 }

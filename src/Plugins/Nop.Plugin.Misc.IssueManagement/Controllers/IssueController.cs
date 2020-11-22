@@ -163,7 +163,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddAssignment(int? objectId, IssueAssignmentType assignmentType, int issueId)
+        public IActionResult AddAssignment(int objectId, IssueAssignmentType assignmentType, int issueId)
         {
             var assignment = new IssueAssignment
             {
@@ -181,6 +181,13 @@ namespace Nop.Plugin.Misc.IssueManagement.Controllers
         {
             _issueService.DeleteAssignment(id);
             return Json(new { Result = true });
+        }
+
+        [HttpPost]
+        public IActionResult IssueHistoryList(IssueHistorySearchModel searchModel)
+        {
+            var model = _issueModelFactory.PrepareIssueHistoryListModel(searchModel);
+            return Json(model);
         }
     }
 }

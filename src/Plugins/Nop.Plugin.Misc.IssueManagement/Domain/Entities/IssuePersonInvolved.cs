@@ -1,5 +1,6 @@
 ﻿using System;
 using Nop.Core;
+using Nop.Core.Domain.Common;
 
 namespace Nop.Plugin.Misc.IssueManagement.Domain
 {

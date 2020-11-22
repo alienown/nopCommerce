@@ -56,19 +56,3 @@
         </button>
     </div>
 </div>
-
-<script>
-    $(document).ready(function () {
-        var issueStatusesMultiSelect = $('#SearchIssueStatus').data('kendoMultiSelect');
-        issueStatusesMultiSelect.setOptions({
-            autoClose: false,
-            filter: 'contains',
-        });
-
-        var issuePrioritiesMultiSelect = $('#SearchIssuePriority').data('kendoMultiSelect');
-        issuePrioritiesMultiSelect.setOptions({
-            autoClose: false,
-            filter: 'contains',
-        });
-    });
-</script>

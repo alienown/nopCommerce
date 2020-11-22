@@ -17,9 +17,9 @@ namespace Nop.Plugin.Misc.IssueManagement.Infrastructure.Mapper
                 .ForMember(entity => entity.Priority, options => options.DoNotAllowNull())
                 .ForMember(entity => entity.Status, options => options.DoNotAllowNull());
 
-            CreateMap<Issue, IssueGridItemModel>()
-                .ForMember(model => model.CreatedAt, options => options.Ignore())
-                .ForMember(model => model.LastModified, options => options.Ignore());
+            CreateMap<Issue, IssueGridItemModel>();
+            CreateMap<IssueHistory, IssueHistoryGridItem>();
+            CreateMap<IssueAssignment, IssueAssignmentsGridItem>();
         }
 
         public int Order => 1;

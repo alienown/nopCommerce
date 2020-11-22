@@ -1,6 +1,5 @@
 ﻿using System.Data;
 using FluentMigrator.Builders.Create.Table;
-using Nop.Core.Domain.Common;
 using Nop.Core.Domain.Customers;
 using Nop.Data.Extensions;
 using Nop.Data.Mapping.Builders;
