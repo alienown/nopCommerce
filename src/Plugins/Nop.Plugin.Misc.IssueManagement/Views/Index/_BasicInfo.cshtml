@@ -1,15 +1,18 @@
 ﻿@using Nop.Plugin.Misc.IssueManagement.Models
 
+@inject Nop.Services.Localization.ILocalizationService localizationService
+
 @model EditBasicInfoPanelModel
 
-<form id="basicInfoForm">
+<div class="panel-body">
     <div class="form-group">
         <div class="col-md-3">
             <nop-label asp-for="Name" />
         </div>
         <div class="col-md-9">
-            <nop-editor asp-for="Name" />
-            <span asp-validation-for="Name"></span>
+            <div class="form-text-row">
+                @Model.Name
+            </div>
         </div>
     </div>
     <div class="form-group">
@@ -17,8 +20,9 @@
             <nop-label asp-for="Description" />
         </div>
         <div class="col-md-9">
-            <nop-editor asp-for="Description" />
-            <span asp-validation-for="Description"></span>
+            <div class="form-text-row">
+                @Model.Description
+            </div>
         </div>
     </div>
     <div class="form-group">
@@ -26,8 +30,12 @@
             <nop-label asp-for="Deadline" />
         </div>
         <div class="col-md-9">
-            <nop-editor asp-for="Deadline" />
-            <span asp-validation-for="Deadline"></span>
+            @if (Model.Deadline.HasValue)
+            {
+                <div class="form-text-row">
+                    @Model.Deadline.Value.ToShortDateString() @Model.Deadline.Value.ToShortTimeString()
+                </div>
+            }
         </div>
     </div>
     <div class="form-group">
@@ -35,8 +43,9 @@
             <nop-label asp-for="Priority" />
         </div>
         <div class="col-md-9">
-            <nop-select asp-for="Priority" asp-items="Model.PrioritySelectList" />
-            <span asp-validation-for="Priority"></span>
+            <div class="form-text-row">
+                @localizationService.GetLocalizedEnum(Model.Priority.Value)
+            </div>
         </div>
     </div>
     <div class="form-group">
@@ -44,8 +53,9 @@
             <nop-label asp-for="Status" />
         </div>
         <div class="col-md-9">
-            <nop-select asp-for="Status" asp-items="Model.StatusSelectList" />
-            <span asp-validation-for="Status"></span>
+            <div class="form-text-row">
+                @localizationService.GetLocalizedEnum(Model.Status.Value)
+            </div>
         </div>
     </div>
-</form>
+</div>

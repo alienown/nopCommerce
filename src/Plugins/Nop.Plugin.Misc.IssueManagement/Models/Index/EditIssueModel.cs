@@ -13,5 +13,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Models
         public IssueHistoryPanelModel HistoryPanelModel { get; set; }
 
         public IssueCommentsPanelModel CommentsPanelModel { get; set; }
+
+        public bool CanEdit { get; set; }
     }
 }

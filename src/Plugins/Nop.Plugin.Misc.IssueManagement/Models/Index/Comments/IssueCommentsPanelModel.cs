@@ -5,5 +5,7 @@
         public IssueCommentsSearchModel CommentsSearchModel { get; set; }
 
         public AddIssueCommentModel AddCommentModel { get; set; }
+
+        public bool CanEdit { get; set; }
     }
 }

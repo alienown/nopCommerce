@@ -7,6 +7,7 @@
     Layout = "_AdminLayout";
     ViewBag.PageTitle = T("Plugins.Misc.IssueManagement.List.Title").Text;
     Html.SetActiveMenuItemSystemName("All issues");
+    Html.AddCssFileParts(ResourceLocation.Head, "~/Plugins/Misc.IssueManagement/Content/index.css");
     Html.AddCssFileParts(ResourceLocation.Head, "~/Plugins/Misc.IssueManagement/Content/List/index.css");
 }
 
@@ -56,7 +57,7 @@
     var filtersScope = function () {
         var self = {};
 
-        function prepareStatusesMultiSelect() {
+        function createStatusesMultiSelect() {
             var issueStatusesMultiSelect = $('#SearchIssueStatus').data('kendoMultiSelect');
             issueStatusesMultiSelect.setOptions({
                 autoClose: false,
@@ -64,7 +65,7 @@
             });
         }
 
-        function preparePrioritiesMultiSelect() {
+        function createPrioritiesMultiSelect() {
             var issuePrioritiesMultiSelect = $('#SearchIssuePriority').data('kendoMultiSelect');
             issuePrioritiesMultiSelect.setOptions({
                 autoClose: false,
@@ -72,9 +73,47 @@
             });
         }
 
+        function createDeadlineFromDateTimePicker() {
+            var input = $('#SearchDeadlineFrom');
+            input.kendoDateTimePicker({
+                dateInput: true,
+                timeFormat: 'hh:mm',
+            });
+
+            input.data('kendoDateTimePicker').value(null);
+            input.attr('readonly', true);
+
+            var clearButton = '<span id="clearSearchDeadlineFrom" class="k-link k-link-clear" aria-label="Clear the DateTimePicker"><span unselectable="on" class="k-icon k-i-close" aria-controls="dtp_timeview"></span></span>';
+            input.data('kendoDateTimePicker').wrapper.find(".k-select").append(clearButton);
+
+            $("#clearSearchDeadlineFrom").on("click", function (e) {
+                input.data('kendoDateTimePicker').value(null)
+            });
+        }
+
+        function createDeadlineToDateTimePicker() {
+            var input = $('#SearchDeadlineTo');
+            input.kendoDateTimePicker({
+                dateInput: true,
+                timeFormat: 'hh:mm',
+            });
+
+            input.data('kendoDateTimePicker').value(null);
+            input.attr('readonly', true);
+
+            var clearButton = '<span id="clearSearchDeadlineTo" class="k-link k-link-clear" aria-label="Clear the DateTimePicker"><span unselectable="on" class="k-icon k-i-close" aria-controls="dtp_timeview"></span></span>';
+            input.data('kendoDateTimePicker').wrapper.find(".k-select").append(clearButton);
+
+            $('#clearSearchDeadlineTo').on("click", function (e) {
+                input.data('kendoDateTimePicker').value(null)
+            });
+        }
+
         self.initialize = function () {
-            prepareStatusesMultiSelect();
-            preparePrioritiesMultiSelect();
+            createStatusesMultiSelect();
+            createPrioritiesMultiSelect();
+            createDeadlineFromDateTimePicker();
+            createDeadlineToDateTimePicker();
         }
 
         return self;

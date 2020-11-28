@@ -32,6 +32,7 @@
     gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueCommentsGridItem.Id))
     {
         Title = T("Admin.Common.Delete").Text,
+        Visible = Model.CanEdit,
         ClassName = NopColumnClassDefaults.Button,
         Render = new RenderCustom("commentsScope.renderDeleteButton"),
         Width = "50"

@@ -10,6 +10,7 @@ using Nop.Data;
 using Nop.Plugin.Misc.IssueManagement.Domain;
 using Nop.Services.Catalog;
 using Nop.Services.Customers;
+using Nop.Services.Helpers;
 
 namespace Nop.Plugin.Misc.IssueManagement.Services
 {
@@ -18,7 +19,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
         private readonly IWorkContext _workContext;
         private readonly ICustomerService _customerService;
         private readonly IProductService _productService;
-
+        private readonly IDateTimeHelper _dateTimeHelper;
         private readonly IRepository<Issue> _issueRepository;
         private readonly IRepository<IssueHistory> _issueHistoryRepository;
         private readonly IRepository<IssuePersonInvolved> _issuePersonsInvolvedRepository;
@@ -34,7 +35,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
             IRepository<IssueHistory> issueHistoryRepository, IRepository<IssuePersonInvolved> issuePersonsInvolvedRepository,
             IRepository<IssueAssignment> issueAssignmentRepository, IRepository<IssueComment> issueCommentRepository,
             IRepository<Customer> customerRepository, IRepository<GenericAttribute> genericAttributeRepository,
-            IProductService productService)
+            IProductService productService, IDateTimeHelper dateTimeHelper)
         {
             _workContext = workContext;
             _customerService = customerService;
@@ -46,6 +47,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
             _customerRepository = customerRepository;
             _genericAttributeRepository = genericAttributeRepository;
             _productService = productService;
+            _dateTimeHelper = dateTimeHelper;
         }
 
         public Issue GetIssue(int id)
@@ -99,6 +101,10 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
             issue.CreatedBy = currentUserId;
             issue.CreatedAt = now;
             issue.LastModified = now;
+            if (issue.Deadline.HasValue)
+            {
+                issue.Deadline = _dateTimeHelper.ConvertToUtcTime(issue.Deadline.Value, DateTimeKind.Local);
+            }
 
             _issueRepository.Insert(issue);
             var personInvolved = new IssuePersonInvolved
@@ -122,6 +128,10 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
                 issue.CreatedAt = originalIssue.CreatedAt;
                 issue.CreatedBy = originalIssue.CreatedBy;
                 issue.LastModified = DateTime.UtcNow;
+                if (issue.Deadline.HasValue)
+                {
+                    issue.Deadline = _dateTimeHelper.ConvertToUtcTime(issue.Deadline.Value, DateTimeKind.Local);
+                }
                 var changes = GenerateIssueHistoryEntiresForIssueEntity(issue);
                 _issueRepository.Update(issue);
                 _issueHistoryRepository.Insert(changes);
@@ -431,6 +441,18 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
             }, pageIndex: pageIndex, pageSize: pageSize, getOnlyTotalCount: getOnlyTotalCount);
 
             return list;
+        }
+
+        public bool CanEditIssue(int issueId)
+        {
+            var issue = _issueRepository.GetById(issueId);
+            var currentCustomerId = _workContext.CurrentCustomer.Id;
+
+            var isPersonInvolved = _issuePersonsInvolvedRepository.Table.Any(x => x.CustomerId == currentCustomerId && x.IssueId == issueId);
+            var isCreator = issue.CreatedBy == currentCustomerId;
+            var isAdmin = _customerService.IsInCustomerRole(_workContext.CurrentCustomer, NopCustomerDefaults.AdministratorsRoleName);
+
+            return isAdmin || isPersonInvolved || isCreator;
         }
     }
 }

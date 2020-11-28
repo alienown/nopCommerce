@@ -18,5 +18,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Models
         public IssueAssignmentType AssignmentType { get; set; }
 
         public SelectList AssignmentTypesSelectList { get; set; }
+
+        public bool CanEdit { get; set; }
     }
 }

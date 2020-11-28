@@ -11,5 +11,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Models
 
         [NopResourceDisplayName("Plugins.Misc.IssueManagement.Edit.PersonsInvolvedPanel.AddPersonsInvolvedSubPanel.Person")]
         public int? CustomerId { get; set; }
+
+        public bool CanEdit { get; set; }
     }
 }

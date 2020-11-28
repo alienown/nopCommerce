@@ -1,7 +1,9 @@
-﻿using AutoMapper;
+﻿using System;
+using AutoMapper;
 using Nop.Core.Infrastructure.Mapper;
 using Nop.Plugin.Misc.IssueManagement.Domain;
 using Nop.Plugin.Misc.IssueManagement.Models;
+using Nop.Services.Helpers;
 
 namespace Nop.Plugin.Misc.IssueManagement.Infrastructure.Mapper
 {

@@ -6,7 +6,7 @@
 @{
     Layout = "_AdminLayout";
     ViewBag.PageTitle = T("Plugins.Misc.IssueManagement.Edit.Title").Text;
-    Html.SetActiveMenuItemSystemName("New issue");
+    Html.AddCssFileParts(ResourceLocation.Head, "~/Plugins/Misc.IssueManagement/Content/index.css");
 }
 
 @{
@@ -50,18 +50,14 @@
                        asp-hide-block-attribute-name="@hideBasicInfoBlockAttributeName"
                        asp-hide="@hideBasicInfoPanel"
                        asp-advanced="false">
-                <div class="panel-body">
-                    <div id="basicInfoFormContainer">
-                        @await Html.PartialAsync("~/Plugins/Misc.IssueManagement/Views/Index/_BasicInfo.cshtml", Model.BasicInfoPanelModel)
-                    </div>
-                    <div class="form-group">
-                        <div class="col-md-9 col-md-offset-3">
-                            <button type="button" id="saveBasicInfo" class="btn btn-primary">
-                                @T("Plugins.Misc.IssueManagement.Edit.BasicInfoPanel.SaveButton")
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                @if (Model.CanEdit)
+                {
+                    @await Html.PartialAsync("~/Plugins/Misc.IssueManagement/Views/Index/_BasicInfoForm.cshtml", Model.BasicInfoPanelModel)
+                }
+                else
+                {
+                    @await Html.PartialAsync("~/Plugins/Misc.IssueManagement/Views/Index/_BasicInfo.cshtml", Model.BasicInfoPanelModel)
+                }
             </nop-panel>
             <nop-panel asp-name="personsInvolvedPanel"
                        asp-icon="fa fa-users"
@@ -104,6 +100,7 @@
 <script>
     var basicInfoScope = function () {
         var self = {};
+        var canEdit = '@Model.CanEdit' === 'True';
 
         function serializeForm() {
             var data = {};
@@ -111,7 +108,7 @@
             data.Id = '@Model.Id';
             data.name = $('#basicInfoPanel #Name').val();
             data.description = $('#basicInfoPanel #Description').val();
-            data.deadline = $('#basicInfoPanel #Deadline').val();
+            data.deadline = $('#basicInfoPanel #deadline').val();
             data.priority = $('#basicInfoPanel #Priority').val();
             data.status = $('#basicInfoPanel #Status').val();
 
@@ -148,11 +145,40 @@
             });
         }
 
+        function createDeadlineDateTimePicker() {
+            var input = $('#deadline');
+            var inputValue = input.val();
+            var value = null;
+            if (inputValue && inputValue) {
+                value = moment(inputValue).toDate();
+            }
+
+            input.kendoDateTimePicker({
+                dateInput: true,
+                timeFormat: 'hh:mm',
+            });
+
+            input.data('kendoDateTimePicker').value(value);
+            input.attr('readonly', true);
+
+            var clearButton = '<span class="k-datetimepicker-clear k-link k-link-clear" aria-label="Clear the DateTimePicker"><span unselectable="on" class="k-icon k-i-close" aria-controls="dtp_timeview"></span></span>';
+            input.data('kendoDateTimePicker').wrapper.find(".k-select").append(clearButton);
+
+            $(".k-datetimepicker-clear.k-link.k-link-clear").on("click", function (e) {
+                input.data('kendoDateTimePicker').value(null)
+            });
+        }
+
         function bindEvents() {
-            $('#saveBasicInfo').on('click', saveBasicInfo);
+            if (canEdit) {
+                $('#saveBasicInfo').on('click', saveBasicInfo);
+            }
         }
 
         self.initialize = function () {
+            if (canEdit) {
+                createDeadlineDateTimePicker();
+            }
             bindEvents();
         }
 
@@ -161,6 +187,7 @@
 
     var assignmentsScope = function () {
         var self = {};
+        var canEdit = '@Model.CanEdit' === 'True';
 
         function onAddAssignmentButtonClick() {
             var addAssignmentButton = $('#addAssignment');
@@ -243,7 +270,9 @@
         }
 
         function bindEvents() {
-            $('#addAssignment').on('click', onAddAssignmentButtonClick);
+            if (canEdit) {
+                $('#addAssignment').on('click', onAddAssignmentButtonClick);
+            }
         }
 
         function renderProductAssignment(row) {
@@ -270,7 +299,9 @@
         }
 
         self.initialize = function () {
-            createAssignmentsComboBox();
+            if (canEdit) {
+                createAssignmentsComboBox();
+            }
             bindEvents();
         }
 
@@ -279,6 +310,7 @@
 
     var personsInvolvedScope = function () {
         var self = {};
+        var canEdit = '@Model.CanEdit' === 'True';
 
         function onAddPersonInvolvedButtonClick() {
             var addPersonInvolvedButton = $('#addPersonInvolved');
@@ -356,11 +388,15 @@
         }
 
         function bindEvents() {
-            $('#addPersonInvolved').on('click', onAddPersonInvolvedButtonClick);
+            if (canEdit) {
+                $('#addPersonInvolved').on('click', onAddPersonInvolvedButtonClick);
+            }
         }
 
         self.initialize = function () {
-            createPersonsInvolvedComboBox();
+            if (canEdit) {
+                createPersonsInvolvedComboBox();
+            }
             bindEvents();
         }
 

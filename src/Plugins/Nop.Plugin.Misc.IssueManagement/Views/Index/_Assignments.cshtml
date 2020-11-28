@@ -21,6 +21,7 @@
     gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueAssignmentsGridItem.Id))
     {
         Title = T("Admin.Common.Delete").Text,
+        Visible = Model.CanEdit,
         ClassName = NopColumnClassDefaults.Button,
         Render = new RenderButtonRemove(T("Admin.Common.Delete").Text),
         Width = "50"
@@ -28,39 +29,46 @@
 }
 
 <div class="panel-body">
-    <div class="subpanel">
+    @if (Model.CanEdit)
+    {
+        <div class="subpanel">
+            @await Html.PartialAsync("Table", gridModel)
+        </div>
+        <div class="panel panel-default no-margin">
+            <div class="panel-heading">
+                @T("Plugins.Misc.IssueManagement.Edit.AssignmentsPanel.AddAssignmentsSubPanel.Title")
+            </div>
+            <div class="panel-body">
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <nop-label asp-for="ObjectId" />
+                    </div>
+                    <div class="col-md-9">
+                        @Html.TextBoxFor(x => x.ObjectId)
+                        <span asp-validation-for="ObjectId"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <nop-label asp-for="AssignmentType" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-select asp-for="AssignmentType" asp-items="Model.AssignmentTypesSelectList" />
+                        <span asp-validation-for="AssignmentType"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-9 col-md-offset-3">
+                        <button type="button" id="addAssignment" class="btn btn-primary" disabled>
+                            @T("Plugins.Misc.IssueManagement.Edit.AssignmentsPanel.AddAssignmentsSubPanel.AddAssignmentButton")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
         @await Html.PartialAsync("Table", gridModel)
-    </div>
-    <div class="panel panel-default no-margin">
-        <div class="panel-heading">
-            @T("Plugins.Misc.IssueManagement.Edit.AssignmentsPanel.AddAssignmentsSubPanel.Title")
-        </div>
-        <div class="panel-body">
-            <div class="form-group">
-                <div class="col-md-3">
-                    <nop-label asp-for="ObjectId" />
-                </div>
-                <div class="col-md-9">
-                    @Html.TextBoxFor(x => x.ObjectId)
-                    <span asp-validation-for="ObjectId"></span>
-                </div>
-            </div>
-            <div class="form-group">
-                <div class="col-md-3">
-                    <nop-label asp-for="AssignmentType" />
-                </div>
-                <div class="col-md-9">
-                    <nop-select asp-for="AssignmentType" asp-items="Model.AssignmentTypesSelectList" />
-                    <span asp-validation-for="AssignmentType"></span>
-                </div>
-            </div>
-            <div class="form-group">
-                <div class="col-md-9 col-md-offset-3">
-                    <button type="button" id="addAssignment" class="btn btn-primary" disabled>
-                        @T("Plugins.Misc.IssueManagement.Edit.AssignmentsPanel.AddAssignmentsSubPanel.AddAssignmentButton")
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    }
 </div>

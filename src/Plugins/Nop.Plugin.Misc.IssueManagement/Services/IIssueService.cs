@@ -44,5 +44,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
         void DeleteComment(int id);
 
         IPagedList<IssueComment> GetCommentList(int issueId, int pageIndex = 0, int pageSize = int.MaxValue, bool getOnlyTotalCount = false);
+
+        bool CanEditIssue(int issueId);
     }
 }

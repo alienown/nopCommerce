@@ -6,6 +6,7 @@
     Layout = "_AdminLayout";
     ViewBag.PageTitle = T("Plugins.Misc.IssueManagement.Add.Title").Text;
     Html.SetActiveMenuItemSystemName("New issue");
+    Html.AddCssFileParts(ResourceLocation.Head, "~/Plugins/Misc.IssueManagement/Content/index.css");
 }
 
 @{
@@ -48,3 +49,37 @@
         </div>
     </div>
 </form>
+
+<script>
+    var basicInfoScope = function () {
+        var self = {};
+
+        function createDeadlineDateTimePicker() {
+            var input = $('#Deadline');
+            input.kendoDateTimePicker({
+                dateInput: true,
+                timeFormat: 'hh:mm',
+            });
+
+            input.data('kendoDateTimePicker').value(null)
+            input.attr('readonly', true);
+
+            var clearButton = '<span class="k-datetimepicker-clear k-link k-link-clear" aria-label="Clear the DateTimePicker"><span unselectable="on" class="k-icon k-i-close" aria-controls="dtp_timeview"></span></span>';
+            input.data('kendoDateTimePicker').wrapper.find(".k-select").append(clearButton);
+
+            $(".k-datetimepicker-clear.k-link.k-link-clear").on("click", function (e) {
+                input.data('kendoDateTimePicker').value(null)
+            });
+        }
+
+        self.initialize = function () {
+            createDeadlineDateTimePicker();
+        }
+
+        return self;
+    }();
+
+    $(document).ready(function () {
+        basicInfoScope.initialize();
+    });
+</script>

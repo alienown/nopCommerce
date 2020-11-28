@@ -67,6 +67,9 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
                 model.BasicInfoPanelModel = PrepareEditBasicInfoPanelModel(model.BasicInfoPanelModel, null);
             }
 
+            var canEdit = _issueService.CanEditIssue(model.Id);
+            model.CanEdit = canEdit;
+
             model.PersonsInvolvedPanelModel = PrepareEditIssuePersonsInvolvedPanelModel(model);
             model.AssignmentsPanelModel = PrepareEditIssueAssignmentsPanelModel(model);
             model.HistoryPanelModel = PrepareIssueHistoryPanelModel(model);
@@ -86,7 +89,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
                     Description = entity.Description,
                     Priority = entity.Priority,
                     Status = entity.Status,
-                    Deadline = entity.Deadline,
+                    Deadline = entity.Deadline.HasValue ? _dateTimeHelper.ConvertToUserTime(entity.Deadline.Value, DateTimeKind.Utc) : (DateTime?)null,
                 };
             }
 
@@ -100,6 +103,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
         {
             var panelModel = new EditIssuePersonsInvolvedPanelModel();
             panelModel.PersonsInvolvedSearchModel = PrepareIssuePersonsInvolvedSearchModel(model);
+            panelModel.CanEdit = model.CanEdit;
             return panelModel;
         }
 
@@ -145,6 +149,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
             var panelModel = new EditIssueAssignmentsPanelModel();
             panelModel.AssignmentTypesSelectList = IssueAssignmentType.Product.ToSelectList();
             panelModel.AssignmentsSearchModel = PrepareIssueAssignmentsSearchModel(model);
+            panelModel.CanEdit = model.CanEdit;
             return panelModel;
         }
 
@@ -234,7 +239,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
                 searchModel.SearchDeadlineFrom, searchModel.SearchDeadlineTo, searchModel.Page - 1, searchModel.PageSize);
 
             var createdByIds = issueList.Select(x => x.CreatedBy).Distinct();
-            var customers = _customerService.GetCustomersByIds(createdByIds.ToArray()).ToDictionary(x => x.Id); 
+            var customers = _customerService.GetCustomersByIds(createdByIds.ToArray()).ToDictionary(x => x.Id);
 
             var model = new IssueListModel().PrepareToGrid(searchModel, issueList, () =>
             {
@@ -249,6 +254,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
 
                     item.StatusDisplay = _localizationService.GetLocalizedEnum(x.Status);
                     item.PriorityDisplay = _localizationService.GetLocalizedEnum(x.Priority);
+                    item.Deadline = item.Deadline.HasValue ? _dateTimeHelper.ConvertToUserTime(item.Deadline.Value, DateTimeKind.Utc) : (DateTime?)null;
                     item.CreatedAt = _dateTimeHelper.ConvertToUserTime(x.CreatedAt, DateTimeKind.Utc);
                     item.LastModified = _dateTimeHelper.ConvertToUserTime(x.LastModified, DateTimeKind.Utc);
 
@@ -489,22 +495,53 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
             var details = new List<IssueHistoryChangeDetails>();
             foreach (var change in simpleChanges)
             {
-                details.Add(new IssueHistoryChangeDetails
+                if (change.ChangeType == IssueChangeType.Deadline)
                 {
-                    IssueHistoryId = change.Id,
-                    NewValue = change.NewValue,
-                    OldValue = change.OldValue,
-                });
+                    details.Add(new IssueHistoryChangeDetails
+                    {
+                        IssueHistoryId = change.Id,
+                        NewValue = ParseAndConvertDateTimeHistoryValue(change.NewValue),
+                        OldValue = ParseAndConvertDateTimeHistoryValue(change.OldValue),
+                    });
+                }
+                else
+                {
+                    details.Add(new IssueHistoryChangeDetails
+                    {
+                        IssueHistoryId = change.Id,
+                        NewValue = change.NewValue,
+                        OldValue = change.OldValue,
+                    });
+                }
             }
 
             return details;
         }
 
+        private string ParseAndConvertDateTimeHistoryValue(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return value;
+            }
+
+            DateTime.TryParse(value, out var parsedValue);
+
+            if (parsedValue == null)
+            {
+                return string.Empty;
+            }
+
+            var convertedValue = _dateTimeHelper.ConvertToUserTime(parsedValue, DateTimeKind.Utc).ToString();
+            return convertedValue;
+        }
+
         private IssueCommentsPanelModel PrepareIssueCommentsPanelModel(EditIssueModel model)
         {
-            var commentsPanelModel = new IssueCommentsPanelModel();
-            commentsPanelModel.CommentsSearchModel = PrepareIssueCommentsSearchModel(model);
-            return commentsPanelModel;
+            var panelModel = new IssueCommentsPanelModel();
+            panelModel.CommentsSearchModel = PrepareIssueCommentsSearchModel(model);
+            panelModel.CanEdit = model.CanEdit;
+            return panelModel;
         }
 
         private IssueCommentsSearchModel PrepareIssueCommentsSearchModel(EditIssueModel model)
@@ -520,6 +557,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
 
             var createdByIds = changes.Select(x => x.CreatedBy).Distinct();
             var customers = _customerService.GetCustomersByIds(createdByIds.ToArray()).ToDictionary(x => x.Id);
+            var isAdmin = _customerService.IsInCustomerRole(_workContext.CurrentCustomer, NopCustomerDefaults.AdministratorsRoleName);
 
             var model = new IssueCommentListModel().PrepareToGrid(searchModel, changes, () =>
             {
@@ -539,7 +577,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
                         item.CreatedByFullName = customerFullName;
                     }
 
-                    if (_workContext.IsAdmin || x.CreatedBy == currentUserId)
+                    if (isAdmin || x.CreatedBy == currentUserId)
                     {
                         item.CanDelete = true;
                     }
