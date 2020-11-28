@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
 using Nop.Core;
-using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Common;
 using Nop.Core.Domain.Customers;
 using Nop.Data;
@@ -25,6 +23,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
         private readonly IRepository<IssueHistory> _issueHistoryRepository;
         private readonly IRepository<IssuePersonInvolved> _issuePersonsInvolvedRepository;
         private readonly IRepository<IssueAssignment> _issueAssignmentRepository;
+        private readonly IRepository<IssueComment> _issueCommentRepository;
         private readonly IRepository<Customer> _customerRepository;
         private readonly IRepository<GenericAttribute> _genericAttributeRepository;
 
@@ -33,8 +32,9 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
 
         public IssueService(IWorkContext workContext, ICustomerService customerService, IRepository<Issue> issueRepository,
             IRepository<IssueHistory> issueHistoryRepository, IRepository<IssuePersonInvolved> issuePersonsInvolvedRepository,
-            IRepository<IssueAssignment> issueAssignmentRepository, IRepository<Customer> customerRepository,
-            IRepository<GenericAttribute> genericAttributeRepository, IProductService productService)
+            IRepository<IssueAssignment> issueAssignmentRepository, IRepository<IssueComment> issueCommentRepository,
+            IRepository<Customer> customerRepository, IRepository<GenericAttribute> genericAttributeRepository,
+            IProductService productService)
         {
             _workContext = workContext;
             _customerService = customerService;
@@ -42,6 +42,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
             _issueHistoryRepository = issueHistoryRepository;
             _issuePersonsInvolvedRepository = issuePersonsInvolvedRepository;
             _issueAssignmentRepository = issueAssignmentRepository;
+            _issueCommentRepository = issueCommentRepository;
             _customerRepository = customerRepository;
             _genericAttributeRepository = genericAttributeRepository;
             _productService = productService;
@@ -390,7 +391,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
         {
             var list = _issueHistoryRepository.GetAllPaged(query =>
             {
-                query = query.Where(x => x.IssueId == issueId);
+                query = query.Where(x => x.IssueId == issueId).OrderByDescending(x => x.ModifiedAt);
                 return query;
             }, pageIndex: pageIndex, pageSize: pageSize, getOnlyTotalCount: getOnlyTotalCount);
 
@@ -401,6 +402,35 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
         {
             var result = _issueAssignmentRepository.GetByIds(assignmentsIds).ToList();
             return result;
+        }
+
+        public void InsertComment(IssueComment comment)
+        {
+            var now = DateTime.UtcNow;
+            var currentUserId = _workContext.CurrentCustomer.Id;
+            comment.CreatedAt = now;
+            comment.CreatedBy = currentUserId;
+            _issueCommentRepository.Insert(comment);
+        }
+
+        public void DeleteComment(int id)
+        {
+            var comment = _issueCommentRepository.GetById(id);
+            if (comment != null)
+            {
+                _issueCommentRepository.Delete(comment);
+            }
+        }
+
+        public IPagedList<IssueComment> GetCommentList(int issueId, int pageIndex = 0, int pageSize = int.MaxValue, bool getOnlyTotalCount = false)
+        {
+            var list = _issueCommentRepository.GetAllPaged(query =>
+            {
+                query = query.Where(x => x.IssueId == issueId).OrderByDescending(x => x.CreatedAt);
+                return query;
+            }, pageIndex: pageIndex, pageSize: pageSize, getOnlyTotalCount: getOnlyTotalCount);
+
+            return list;
         }
     }
 }

@@ -20,6 +20,8 @@ namespace Nop.Plugin.Misc.IssueManagement.Infrastructure.Mapper
             CreateMap<Issue, IssueGridItemModel>();
             CreateMap<IssueHistory, IssueHistoryGridItem>();
             CreateMap<IssueAssignment, IssueAssignmentsGridItem>();
+            CreateMap<AddIssueCommentModel, IssueComment>();
+            CreateMap<IssueComment, IssueCommentsGridItem>();
         }
 
         public int Order => 1;

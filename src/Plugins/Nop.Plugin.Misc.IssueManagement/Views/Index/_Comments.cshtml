@@ -1,0 +1,62 @@
+﻿@using Nop.Plugin.Misc.IssueManagement.Models
+@using Nop.Web.Framework.Models.DataTables
+@using Microsoft.AspNetCore.Routing
+
+@model IssueCommentsPanelModel
+
+@{
+    var gridModel = new DataTablesModel
+    {
+        Name = "commentsGrid",
+        UrlRead = new DataUrl("IssueCommentList", "Issue", new RouteValueDictionary(new { issueId = Model.CommentsSearchModel.IssueId })),
+        Length = Model.CommentsSearchModel.PageSize,
+        LengthMenu = Model.CommentsSearchModel.AvailablePageSizes,
+        UrlDelete = new DataUrl("DeleteComment", "Issue", null),
+    };
+    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueCommentsGridItem.Content))
+    {
+        Title = T("Plugins.Misc.IssueManagement.Edit.CommentsPanel.Grid.Columns.Comment").Text,
+        Render = new RenderCustom("commentsScope.renderComment"),
+    });
+    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueCommentsGridItem.CreatedByFullName))
+    {
+        Title = T("Plugins.Misc.IssueManagement.Edit.CommentsPanel.Grid.Columns.CreatedBy").Text,
+        Width = "300",
+    });
+    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueCommentsGridItem.CreatedAt))
+    {
+        Title = T("Plugins.Misc.IssueManagement.Edit.CommentsPanel.Grid.Columns.CreatedAt").Text,
+        Width = "170",
+        Render = new RenderDate(),
+    });
+    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(IssueCommentsGridItem.Id))
+    {
+        Title = T("Admin.Common.Delete").Text,
+        ClassName = NopColumnClassDefaults.Button,
+        Render = new RenderCustom("commentsScope.renderDeleteButton"),
+        Width = "50"
+    });
+}
+
+<div class="panel-body">
+    <div class="subpanel">
+        @await Html.PartialAsync("Table", gridModel)
+    </div>
+    <div class="panel panel-default no-margin">
+        <div class="panel-heading">
+            @T("Plugins.Misc.IssueManagement.Edit.CommentsPanel.AddCommentSubPanel.Title")
+        </div>
+        <div class="panel-body">
+            <div id="addCommentFormContainer">
+                @await Html.PartialAsync("~/Plugins/Misc.IssueManagement/Views/Index/_AddComment.cshtml", Model.AddCommentModel)
+            </div>
+            <div class="form-group">
+                <div class="col-md-9 col-md-offset-3">
+                    <button type="button" id="addComment" class="btn btn-primary">
+                        @T("Plugins.Misc.Issuemanagement.Edit.CommentsPanel.AddCommentSubPanel.AddCommentButton")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

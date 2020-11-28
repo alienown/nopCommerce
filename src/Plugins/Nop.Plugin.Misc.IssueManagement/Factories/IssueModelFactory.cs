@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
+using Nop.Core;
 using Nop.Core.Domain.Customers;
 using Nop.Plugin.Misc.IssueManagement.Domain;
 using Nop.Plugin.Misc.IssueManagement.Models;
@@ -25,15 +26,17 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
         private readonly IDateTimeHelper _dateTimeHelper;
         private readonly ILocalizationService _localizationService;
         private readonly IProductService _productService;
+        private readonly IWorkContext _workContext;
 
         public IssueModelFactory(IIssueService issueService, ICustomerService customerService, IDateTimeHelper dateTimeHelper,
-            ILocalizationService localizationService, IProductService productService)
+            ILocalizationService localizationService, IProductService productService, IWorkContext workContext)
         {
             _issueService = issueService;
             _customerService = customerService;
             _dateTimeHelper = dateTimeHelper;
             _localizationService = localizationService;
             _productService = productService;
+            _workContext = workContext;
         }
 
         public AddIssueModel PrepareAddIssueModel(AddIssueModel model)
@@ -67,6 +70,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
             model.PersonsInvolvedPanelModel = PrepareEditIssuePersonsInvolvedPanelModel(model);
             model.AssignmentsPanelModel = PrepareEditIssueAssignmentsPanelModel(model);
             model.HistoryPanelModel = PrepareIssueHistoryPanelModel(model);
+            model.CommentsPanelModel = PrepareIssueCommentsPanelModel(model);
 
             return model;
         }
@@ -341,7 +345,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
                     }
 
                     return item;
-                }).OrderByDescending(x => x.ModifiedAt);
+                });
 
                 return items;
             });
@@ -494,6 +498,59 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
             }
 
             return details;
+        }
+
+        private IssueCommentsPanelModel PrepareIssueCommentsPanelModel(EditIssueModel model)
+        {
+            var commentsPanelModel = new IssueCommentsPanelModel();
+            commentsPanelModel.CommentsSearchModel = PrepareIssueCommentsSearchModel(model);
+            return commentsPanelModel;
+        }
+
+        private IssueCommentsSearchModel PrepareIssueCommentsSearchModel(EditIssueModel model)
+        {
+            var searchModel = new IssueCommentsSearchModel { IssueId = model.Id };
+            return searchModel;
+        }
+
+        public IssueCommentListModel PrepareIssueCommentListModel(IssueCommentsSearchModel searchModel)
+        {
+            var changes = _issueService.GetCommentList(searchModel.IssueId, searchModel.Page - 1, searchModel.PageSize);
+            var currentUserId = _workContext.CurrentCustomer.Id;
+
+            var createdByIds = changes.Select(x => x.CreatedBy).Distinct();
+            var customers = _customerService.GetCustomersByIds(createdByIds.ToArray()).ToDictionary(x => x.Id);
+
+            var model = new IssueCommentListModel().PrepareToGrid(searchModel, changes, () =>
+            {
+                var items = changes.Select(x =>
+                {
+                    var item = x.ToModel<IssueCommentsGridItem>();
+                    item.CreatedAt = _dateTimeHelper.ConvertToUserTime(x.CreatedAt, DateTimeKind.Utc);
+
+                    var customerFullName = _customerService.GetCustomerFullName(new Customer { Id = x.CreatedBy });
+
+                    if (customers.TryGetValue(x.CreatedBy, out var customer))
+                    {
+                        item.CreatedByFullName = $"{customerFullName} ({customer.Email})";
+                    }
+                    else
+                    {
+                        item.CreatedByFullName = customerFullName;
+                    }
+
+                    if (_workContext.IsAdmin || x.CreatedBy == currentUserId)
+                    {
+                        item.CanDelete = true;
+                    }
+
+                    return item;
+                });
+
+                return items;
+            });
+
+            return model;
         }
     }
 }

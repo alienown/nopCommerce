@@ -38,5 +38,11 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
         IPagedList<IssueHistory> GetHistoryList(int issueId, int pageIndex = 0, int pageSize = int.MaxValue, bool getOnlyTotalCount = false);
 
         List<IssueAssignment> GetAssignmentsByIds(List<int> assignmentsIds);
+
+        void InsertComment(IssueComment comment);
+
+        void DeleteComment(int id);
+
+        IPagedList<IssueComment> GetCommentList(int issueId, int pageIndex = 0, int pageSize = int.MaxValue, bool getOnlyTotalCount = false);
     }
 }

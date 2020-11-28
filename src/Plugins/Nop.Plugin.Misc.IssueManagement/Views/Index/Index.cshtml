@@ -21,6 +21,9 @@
 
     const string hideHistoryBlockAttributeName = "Plugins.Misc.IssueManagement.Edit.HistoryPanel";
     var hideHistoryPanel = genericAttributeService.GetAttribute<bool>(workContext.CurrentCustomer, hideHistoryBlockAttributeName, defaultValue: true);
+
+    const string hideCommentsBlockAttributeName = "Plugins.Misc.IssueManagement.Edit.CommentsPanel";
+    var hideCommentsPanel = genericAttributeService.GetAttribute<bool>(workContext.CurrentCustomer, hideCommentsBlockAttributeName, defaultValue: true);
 }
 
 <div class="content-header clearfix">
@@ -83,6 +86,14 @@
                        asp-hide="@hideHistoryPanel"
                        asp-advanced="false">
                 @await Html.PartialAsync("~/Plugins/Misc.IssueManagement/Views/Index/_History.cshtml", Model.HistoryPanelModel)
+            </nop-panel>
+            <nop-panel asp-name="commentsPanel"
+                       asp-icon="fa fa-comment"
+                       asp-title="@T("Plugins.Misc.IssueManagement.Edit.CommentsPanel.Title")"
+                       asp-hide-block-attribute-name="@hideCommentsBlockAttributeName"
+                       asp-hide="@hideCommentsPanel"
+                       asp-advanced="false">
+                @await Html.PartialAsync("~/Plugins/Misc.IssueManagement/Views/Index/_Comments.cshtml", Model.CommentsPanelModel)
             </nop-panel>
         </nop-panels>
     </div>
@@ -514,9 +525,79 @@
         return self;
     }();
 
+    var commentsScope = function () {
+        var self = {};
+
+        function onAddCommentButtonClick() {
+            var addCommentButton = $('#addComment');
+            var contentTextArea = $('#Content');
+            var content = contentTextArea.val();
+            contentTextArea.prop('disabled', true);
+            addCommentButton.prop('disabled', true);
+            var data = {
+                issueId: '@Model.Id',
+                content: content,
+            };
+
+            $.ajax({
+                cache: false,
+                type: "POST",
+                url: '@Url.Action("AddComment", "Issue")',
+                data: data,
+                success: function (data) {
+                    if (data.Result === true) {
+                        updateTable('#commentsGrid');
+                        contentTextArea.val(null);
+                        contentTextArea.prop('disabled', false);
+                        addCommentButton.prop('disabled', false);
+                    } else {
+                        $('#addCommentFormContainer').html(data);
+                        var form = $('#addCommentForm');
+                        form.unbind();
+                        form.data('validator', null);
+                        $.validator.unobtrusive.parse('#addCommentForm');
+                        form.validate(form.data('unobtrusiveValidation').options);
+                        contentTextArea.prop('disabled', false);
+                        addCommentButton.prop('disabled', false);
+                    }
+                },
+                error: function () {
+                    contentTextArea.prop('disabled', false);
+                    addCommentButton.prop('disabled', false);
+                }
+            });
+        }
+
+        function bindEvents() {
+            $('#addComment').on('click', onAddCommentButtonClick);
+        }
+
+        self.renderComment = function (data, type, row, meta) {
+            var template = '<div style="word-break: break-word;">' + row.Content + '</div>';
+            return template;
+        }
+
+        self.renderDeleteButton = function (data, type, row, meta) {
+            var template = '';
+
+            if (row.CanDelete) {
+                template = '<a href="#" class="btn btn-default" onclick="table_deletedata_commentsGrid(\'' + data + '\');return false;"><i class="fa fa-remove"></i>@T("Admin.Common.Delete")</a>';
+            }
+
+            return template;
+        }
+
+        self.initialize = function () {
+            bindEvents();
+        }
+
+        return self;
+    }();
+
     $(document).ready(function () {
         basicInfoScope.initialize();
         personsInvolvedScope.initialize();
         assignmentsScope.initialize();
+        commentsScope.initialize();
     });
 </script>

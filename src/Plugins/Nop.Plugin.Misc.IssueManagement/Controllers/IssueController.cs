@@ -189,5 +189,32 @@ namespace Nop.Plugin.Misc.IssueManagement.Controllers
             var model = _issueModelFactory.PrepareIssueHistoryListModel(searchModel);
             return Json(model);
         }
+
+        [HttpPost]
+        public IActionResult AddComment(AddIssueCommentModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var comment = model.ToEntity<IssueComment>();
+                _issueService.InsertComment(comment);
+                return Json(new { Result = true });
+            }
+
+            return View("~/Plugins/Misc.IssueManagement/Views/Index/_AddComment.cshtml", model);
+        }
+
+        [HttpPost]
+        public IActionResult DeleteComment(int id)
+        {
+            _issueService.DeleteComment(id);
+            return Json(new { Result = true });
+        }
+
+        [HttpPost]
+        public IActionResult IssueCommentList(IssueCommentsSearchModel searchModel)
+        {
+            var model = _issueModelFactory.PrepareIssueCommentListModel(searchModel);
+            return Json(model);
+        }
     }
 }

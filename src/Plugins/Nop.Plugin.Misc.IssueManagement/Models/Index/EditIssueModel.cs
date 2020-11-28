@@ -11,5 +11,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Models
         public EditIssueAssignmentsPanelModel AssignmentsPanelModel { get; set; }
 
         public IssueHistoryPanelModel HistoryPanelModel { get; set; }
+
+        public IssueCommentsPanelModel CommentsPanelModel { get; set; }
     }
 }
