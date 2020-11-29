@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
 using Nop.Core;
 using Nop.Core.Domain.Customers;
+using Nop.Core.Domain.Vendors;
 using Nop.Plugin.Misc.IssueManagement.Domain;
 using Nop.Plugin.Misc.IssueManagement.Models;
 using Nop.Plugin.Misc.IssueManagement.Services;
@@ -14,6 +15,8 @@ using Nop.Services.Catalog;
 using Nop.Services.Customers;
 using Nop.Services.Helpers;
 using Nop.Services.Localization;
+using Nop.Services.Security;
+using Nop.Services.Vendors;
 using Nop.Web.Areas.Admin.Infrastructure.Mapper.Extensions;
 using Nop.Web.Framework.Models.Extensions;
 
@@ -26,17 +29,22 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
         private readonly IDateTimeHelper _dateTimeHelper;
         private readonly ILocalizationService _localizationService;
         private readonly IProductService _productService;
+        private readonly IVendorService _vendorService;
         private readonly IWorkContext _workContext;
+        private readonly IPermissionService _permissionService;
 
         public IssueModelFactory(IIssueService issueService, ICustomerService customerService, IDateTimeHelper dateTimeHelper,
-            ILocalizationService localizationService, IProductService productService, IWorkContext workContext)
+            ILocalizationService localizationService, IProductService productService, IVendorService vendorService,
+            IWorkContext workContext, IPermissionService permissionService)
         {
             _issueService = issueService;
             _customerService = customerService;
             _dateTimeHelper = dateTimeHelper;
             _localizationService = localizationService;
             _productService = productService;
+            _vendorService = vendorService;
             _workContext = workContext;
+            _permissionService = permissionService;
         }
 
         public AddIssueModel PrepareAddIssueModel(AddIssueModel model)
@@ -103,7 +111,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
         {
             var panelModel = new EditIssuePersonsInvolvedPanelModel();
             panelModel.PersonsInvolvedSearchModel = PrepareIssuePersonsInvolvedSearchModel(model);
-            panelModel.CanEdit = model.CanEdit;
+            panelModel.CanEdit = model.CanEdit && (_workContext.CurrentVendor != null || _permissionService.Authorize(StandardPermissionProvider.ManageCustomers));
             return panelModel;
         }
 
@@ -147,9 +155,23 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
         private EditIssueAssignmentsPanelModel PrepareEditIssueAssignmentsPanelModel(EditIssueModel model)
         {
             var panelModel = new EditIssueAssignmentsPanelModel();
-            panelModel.AssignmentTypesSelectList = IssueAssignmentType.Product.ToSelectList();
+
+            var canManageProducts = _permissionService.Authorize(StandardPermissionProvider.ManageProducts);
+            var canManageVendors = _permissionService.Authorize(StandardPermissionProvider.ManageVendors);
+
+            var assignmentTypesToExclude = new List<int>();
+            if (!canManageProducts)
+            {
+                assignmentTypesToExclude.Add((int)IssueAssignmentType.Product);
+            }
+            if (!canManageVendors)
+            {
+                assignmentTypesToExclude.Add((int)IssueAssignmentType.Vendor);
+            }
+
+            panelModel.AssignmentTypesSelectList = IssueAssignmentType.Product.ToSelectList(valuesToExclude: assignmentTypesToExclude.ToArray());
             panelModel.AssignmentsSearchModel = PrepareIssueAssignmentsSearchModel(model);
-            panelModel.CanEdit = model.CanEdit;
+            panelModel.CanEdit = model.CanEdit && (canManageProducts || canManageVendors);
             return panelModel;
         }
 
@@ -189,14 +211,31 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
             var assignmentTypeToAssignments = assignments.ToLookup(x => x.AssignmentType);
 
             var products = assignmentTypeToAssignments[IssueAssignmentType.Product].ToList();
-            var productsInfo = GetAssignmentsIdsToProductDetails(products).Cast<IssueAssignmentDetails>();
+            var vendors = assignmentTypeToAssignments[IssueAssignmentType.Vendor].ToList();
 
-            var assignmentsIdsToDetails = productsInfo.ToDictionary(x => x.IssueAssignmentId);
-            return assignmentsIdsToDetails;
+            var productsInfo = GetAssignmentsIdsToProductDetails(products).Cast<IssueAssignmentDetails>();
+            var vendorsInfo = GetAssignmentsIdsToVendorDetails(vendors).Cast<IssueAssignmentDetails>();
+
+            var result = MergeAssignmentsDetailsToDictionary(productsInfo, vendorsInfo);
+            return result;
+        }
+
+        private Dictionary<int, IssueAssignmentDetails> MergeAssignmentsDetailsToDictionary(params IEnumerable<IssueAssignmentDetails>[] details)
+        {
+            var concat = Enumerable.Empty<IssueAssignmentDetails>();
+
+            foreach (var list in details)
+            {
+                concat = concat.Concat(list);
+            }
+
+            return concat.ToDictionary(x => x.IssueAssignmentId);
         }
 
         private List<IssueProductAssignmentDetails> GetAssignmentsIdsToProductDetails(List<IssueAssignment> productAssignments)
         {
+            var canManageProducts = _permissionService.Authorize(StandardPermissionProvider.ManageProducts);
+
             var productsIds = productAssignments.Select(x => x.ObjectId);
             var productsInfo = _productService.GetProductsByIds(productsIds.ToArray());
             var productIdsToProductDetails = productsInfo.ToDictionary(x => x.Id);
@@ -211,9 +250,47 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
                 if (productIdsToProductDetails.TryGetValue(x.ObjectId, out var product))
                 {
                     productAssignmentDetails.Name = product.Name;
+
+                    if (canManageProducts && _workContext.CurrentVendor != null && product.VendorId == _workContext.CurrentVendor.Id
+                        || canManageProducts && _workContext.CurrentVendor == null)
+                    {
+                        productAssignmentDetails.CanViewEditPage = true;
+                    }
                 }
 
                 return productAssignmentDetails;
+            }).ToList();
+
+            return details;
+        }
+
+        private List<IssueVendorAssignmentDetails> GetAssignmentsIdsToVendorDetails(List<IssueAssignment> vendorAssignments)
+        {
+            var canManageVendors = _permissionService.Authorize(StandardPermissionProvider.ManageVendors);
+
+            var vendorsIds = vendorAssignments.Select(x => x.ObjectId);
+            var vendorsInfo = _vendorService.GetVendorsByIds(vendorsIds.ToArray());
+            var vendorsIdsToProductDetails = vendorsInfo.ToDictionary(x => x.Id);
+
+            var details = vendorAssignments.Select(x =>
+            {
+                var vendorAssignmentDetails = new IssueVendorAssignmentDetails
+                {
+                    IssueAssignmentId = x.Id,
+                };
+
+                if (vendorsIdsToProductDetails.TryGetValue(x.ObjectId, out var vendor))
+                {
+                    vendorAssignmentDetails.Name = vendor.Name;
+                    vendorAssignmentDetails.Email = vendor.Email;
+                    
+                    if (canManageVendors)
+                    {
+                        vendorAssignmentDetails.CanViewEditPage = true;
+                    }
+                }
+
+                return vendorAssignmentDetails;
             }).ToList();
 
             return details;
@@ -232,6 +309,8 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
 
         public IssueListModel PrepareIssueListModel(IssueSearchModel searchModel)
         {
+            var isVendorCustomer = _workContext.CurrentVendor != null;
+
             var issueStatuses = searchModel.SearchIssueStatus.Select(x => (IssueStatus)x).ToList();
             var issueProrities = searchModel.SearchIssuePriority.Select(x => (IssuePriority)x).ToList();
 
@@ -294,8 +373,9 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
         public List<SelectListItem> GetAssignmentsForAddComboBox(string text, IssueAssignmentType issueAssignmentType, int excludeAssignmentsFromIssueId)
         {
             var existingAssignmentsOfType = _issueService.GetAssignmentList(excludeAssignmentsFromIssueId, issueAssignmentType);
-            var existingAssignmentsOfTypeIds = existingAssignmentsOfType.Select(x => x.Id).ToList();
-            var assignments = _issueService.QuickSearchAssignments(text, issueAssignmentType, existingAssignmentsOfTypeIds);
+            var existingAssignmentsOfTypeObjectIds = existingAssignmentsOfType.Select(x => x.ObjectId).ToList();
+
+            var assignments = _issueService.QuickSearchAssignments(text, issueAssignmentType, existingAssignmentsOfTypeObjectIds);
 
             var list = assignments.Select(x => new SelectListItem
             {
@@ -397,11 +477,15 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
                 .ToLookup(x => x.Value.AssignmentType, x => x.Key);
 
             var productChanges = issueHistoryIdsToAssignmentChangeValuesGroupedByAssignmentType[IssueAssignmentType.Product].ToList();
+            var vendorChanges = issueHistoryIdsToAssignmentChangeValuesGroupedByAssignmentType[IssueAssignmentType.Vendor].ToList();
 
             var productAssignmentChangeDetails = GetProductAssignmentChangeDetails(productChanges, issueHistoryIdsToAssignmentChangeValues)
                 .Cast<IssueHistoryAssignmentDetails>().ToList();
+            var vendorAssignmentChangeDetails = GetVendorAssignmentChangeDetails(vendorChanges, issueHistoryIdsToAssignmentChangeValues)
+                .Cast<IssueHistoryAssignmentDetails>().ToList();
 
             issueHistoryAssignmentDetails.AddRange(productAssignmentChangeDetails);
+            issueHistoryAssignmentDetails.AddRange(vendorAssignmentChangeDetails);
             return issueHistoryAssignmentDetails;
         }
 
@@ -432,12 +516,50 @@ namespace Nop.Plugin.Misc.IssueManagement.Factories
                     IssueHistoryId = change.Id,
                     NewValue = change.NewValue,
                     OldValue = change.OldValue,
+                    AssignmentType = IssueAssignmentType.Product,
                 };
 
-                var productId = issueHistoryIdToProductChangeValue[change].ObjectId;
-                if (productsIdsToProducts.TryGetValue(productId, out var product))
+                var value = issueHistoryIdToProductChangeValue[change];
+                if (productsIdsToProducts.TryGetValue(value.ObjectId, out var product))
                 {
                     details.Name = product.Name;
+                }
+                else
+                {
+                    details.Name = value.Name;
+                }
+
+                result.Add(details);
+            }
+
+            return result;
+        }
+
+        private List<IssueHistoryVendorAssignmentDetails> GetVendorAssignmentChangeDetails(List<IssueHistory> vendorChanges,
+            Dictionary<IssueHistory, IssueHistoryAssignmentValue> issueHistoryIdToVendorChangeValue)
+        {
+            var vendorsIds = issueHistoryIdToVendorChangeValue.Select(x => x.Value.ObjectId).Distinct();
+            var vendorIdsToVendors = _vendorService.GetVendorsByIds(vendorsIds.ToArray()).ToDictionary(x => x.Id);
+            var result = new List<IssueHistoryVendorAssignmentDetails>();
+            foreach (var change in vendorChanges)
+            {
+                var details = new IssueHistoryVendorAssignmentDetails
+                {
+                    IssueHistoryId = change.Id,
+                    NewValue = change.NewValue,
+                    OldValue = change.OldValue,
+                    AssignmentType = IssueAssignmentType.Vendor,
+                };
+
+                var value = issueHistoryIdToVendorChangeValue[change];
+                if (vendorIdsToVendors.TryGetValue(value.ObjectId, out var vendor))
+                {
+                    details.Name = vendor.Name;
+                    details.Email = vendor.Email;
+                }
+                else
+                {
+                    details.Name = value.Name;
                 }
 
                 result.Add(details);

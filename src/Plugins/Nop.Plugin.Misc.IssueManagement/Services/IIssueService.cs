@@ -46,5 +46,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
         IPagedList<IssueComment> GetCommentList(int issueId, int pageIndex = 0, int pageSize = int.MaxValue, bool getOnlyTotalCount = false);
 
         bool CanEditIssue(int issueId);
+
+        bool CanViewIssue(int issueId);
     }
 }

@@ -83,6 +83,11 @@ namespace Nop.Plugin.Misc.IssueManagement.Controllers
         [HttpGet]
         public IActionResult Index(int id)
         {
+            if (!_issueService.CanViewIssue(id))
+            {
+                return AccessDeniedView();
+            }
+
             var issue = _issueService.GetIssue(id);
             if (issue == null || issue.Deleted)
                 return RedirectToAction("List");

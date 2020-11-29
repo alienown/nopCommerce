@@ -35,10 +35,13 @@
         </small>
     </h1>
     <div class="pull-right">
-        <span id="issue-delete" class="btn bg-red">
-            <i class="fa fa-trash-o"></i>
-            @T("Admin.Common.Delete")
-        </span>
+        @if (Model.CanEdit)
+        {
+            <span id="issue-delete" class="btn bg-red">
+                <i class="fa fa-trash-o"></i>
+                @T("Admin.Common.Delete")
+            </span>
+        }
     </div>
 </div>
 <div class="content">
@@ -95,7 +98,10 @@
     </div>
 </div>
 
-<nop-delete-confirmation asp-model-id="@Model.Id" asp-button-id="issue-delete" />
+@if (Model.CanEdit)
+{
+    <nop-delete-confirmation asp-model-id="@Model.Id" asp-button-id="issue-delete" />
+}
 
 <script>
     var basicInfoScope = function () {
@@ -276,11 +282,36 @@
         }
 
         function renderProductAssignment(row) {
-            var productUrl = '@Url.Action("Edit", "Product", new { id = "__ID__", area = "Admin" })';
-            productUrl = productUrl.replace("__ID__", row.ObjectId);
+            var template = '';
 
-            var template = '<i class="mr-1 fa fa-book" title="@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueAssignmentType.Product")"></i>' +
-                '<a href="' + productUrl + '">' + row.Details.Name + '</a>';
+            if (row.Details.CanViewEditPage) {
+                var productUrl = '@Url.Action("Edit", "Product", new { id = "__ID__", area = "Admin" })';
+                productUrl = productUrl.replace("__ID__", row.ObjectId);
+
+                template = '<i class="mr-1 fa fa-book" title="@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueAssignmentType.Product")"></i>' +
+                    '<a href="' + productUrl + '">' + row.Details.Name + '</a>';
+            } else {
+                template = '<i class="mr-1 fa fa-book" title="@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueAssignmentType.Product")"></i>' +
+                    row.Details.Name;
+            }
+
+            return template;
+        }
+
+        function renderVendorAssignment(row) {
+            var template = '';
+
+            if (row.Details.CanViewEditPage) {
+                var vendorUrl = '@Url.Action("Edit", "Vendor", new { id = "__ID__", area = "Admin" })';
+                vendorUrl = vendorUrl.replace("__ID__", row.ObjectId);
+
+                template = '<i class="mr-1 fa fa-shopping-cart" title="@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueAssignmentType.Vendor")"></i>' +
+                    '<a href="' + vendorUrl + '">' + row.Details.Name + ' (' + row.Details.Email + ')' + '</a>';
+            } else {
+                template = '<i class="mr-1 fa fa-shopping-cart" title="@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueAssignmentType.Vendor")"></i>' +
+                    row.Details.Name + ' (' + row.Details.Email + ')';
+            }
+
             return template;
         }
 
@@ -290,6 +321,9 @@
             switch (row.AssignmentType) {
                 case @((byte)IssueAssignmentType.Product):
                     template += renderProductAssignment(row);
+                    break;
+                case @((byte)IssueAssignmentType.Vendor):
+                    template += renderVendorAssignment(row);
                     break;
                 default:
                     break;
@@ -413,11 +447,31 @@
                 case @((byte)IssueAssignmentType.Product):
                     name = '@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueAssignmentType.Product")';
                     break;
+                case @((byte)IssueAssignmentType.Vendor):
+                    name = '@T("Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueAssignmentType.Vendor")';
+                    break;
                 default:
                     break;
             }
 
             return name.toLowerCase();
+        }
+
+        function renderAssignment(changeDetails) {
+            var template = '';
+
+            switch (changeDetails.AssignmentType) {
+                case @((byte)IssueAssignmentType.Product):
+                    template = changeDetails.Name;
+                    break;
+                case @((byte)IssueAssignmentType.Vendor):
+                    template = changeDetails.Name + ' (' + changeDetails.Email + ')';
+                    break;
+                default:
+                    break;
+            }
+
+            return template;
         }
 
         function renderAssignmentChange(row) {
@@ -431,7 +485,9 @@
                 template += '@T("Plugins.Misc.IssueManagement.Edit.Historypanel.Grid.Columns.Change.Removed")';
             }
 
-            template += ' ' + assignmentTypeName + ' ' + changeDetails.Name;
+            var assignmentDisplay = renderAssignment(changeDetails);
+
+            template += ' ' + assignmentTypeName + ' ' + assignmentDisplay;
             return template;
         }
 

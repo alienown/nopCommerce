@@ -3,5 +3,6 @@
     public enum IssueAssignmentType
     {
         Product = 0,
+        Vendor = 1,
     }
 }

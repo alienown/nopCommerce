@@ -6,11 +6,14 @@ using Newtonsoft.Json;
 using Nop.Core;
 using Nop.Core.Domain.Common;
 using Nop.Core.Domain.Customers;
+using Nop.Core.Domain.Vendors;
 using Nop.Data;
 using Nop.Plugin.Misc.IssueManagement.Domain;
 using Nop.Services.Catalog;
 using Nop.Services.Customers;
 using Nop.Services.Helpers;
+using Nop.Services.Security;
+using Nop.Services.Vendors;
 
 namespace Nop.Plugin.Misc.IssueManagement.Services
 {
@@ -19,6 +22,8 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
         private readonly IWorkContext _workContext;
         private readonly ICustomerService _customerService;
         private readonly IProductService _productService;
+        private readonly IVendorService _vendorService;
+        private readonly IPermissionService _permissionService;
         private readonly IDateTimeHelper _dateTimeHelper;
         private readonly IRepository<Issue> _issueRepository;
         private readonly IRepository<IssueHistory> _issueHistoryRepository;
@@ -27,7 +32,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
         private readonly IRepository<IssueComment> _issueCommentRepository;
         private readonly IRepository<Customer> _customerRepository;
         private readonly IRepository<GenericAttribute> _genericAttributeRepository;
-
+        private readonly IRepository<Vendor> _vendorRepository;
         private readonly byte _quickSearchTextFilterMinLength = 3;
         private readonly byte _quickSearchTake = 50;
 
@@ -35,7 +40,8 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
             IRepository<IssueHistory> issueHistoryRepository, IRepository<IssuePersonInvolved> issuePersonsInvolvedRepository,
             IRepository<IssueAssignment> issueAssignmentRepository, IRepository<IssueComment> issueCommentRepository,
             IRepository<Customer> customerRepository, IRepository<GenericAttribute> genericAttributeRepository,
-            IProductService productService, IDateTimeHelper dateTimeHelper)
+            IRepository<Vendor> vendorRepository, IProductService productService, IVendorService vendorService,
+            IPermissionService permissionService, IDateTimeHelper dateTimeHelper)
         {
             _workContext = workContext;
             _customerService = customerService;
@@ -46,7 +52,10 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
             _issueCommentRepository = issueCommentRepository;
             _customerRepository = customerRepository;
             _genericAttributeRepository = genericAttributeRepository;
+            _vendorRepository = vendorRepository;
             _productService = productService;
+            _vendorService = vendorService;
+            _permissionService = permissionService;
             _dateTimeHelper = dateTimeHelper;
         }
 
@@ -88,6 +97,31 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
                     query = query.Where(x => x.Deadline <= deadlineTo.Value);
                 }
 
+                //vendor customers can access issues if they are creators or they are in persons involved or if there is vendor assignment that customer is assigned to
+                if (_workContext.CurrentVendor != null)
+                {
+                    var customerId = _workContext.CurrentCustomer.Id;
+                    var vendorId = _workContext.CurrentVendor.Id;
+
+                    var inPersonsInvolvedQuery = from personInvolved in _issuePersonsInvolvedRepository.Table
+                                                 where personInvolved.CustomerId == customerId
+                                                 select personInvolved.IssueId;
+
+                    var issuesIdsWithVendorOfCustomerQuery = from assignment in _issueAssignmentRepository.Table
+                                                             where assignment.ObjectId == vendorId && assignment.AssignmentType == IssueAssignmentType.Vendor
+                                                             select assignment.IssueId;
+
+                    var issuesCreatedByCustomer = from issue in _issueRepository.Table
+                                                  where issue.CreatedBy == customerId
+                                                  select issue.Id;
+
+                    var issuesIds = inPersonsInvolvedQuery.Union(issuesIdsWithVendorOfCustomerQuery).Union(issuesCreatedByCustomer);
+
+                    query = from issue in query
+                            from issueId in issuesIds.Where(x => x == issue.Id)
+                            select issue;
+                }
+
                 return query;
             }, pageIndex, pageSize, getOnlyTotalCount);
 
@@ -107,6 +141,7 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
             }
 
             _issueRepository.Insert(issue);
+
             var personInvolved = new IssuePersonInvolved
             {
                 IssueId = issue.Id,
@@ -114,10 +149,20 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
                 CreatedBy = currentUserId,
                 CreatedAt = now,
             };
+            InsertPersonInvolved(personInvolved);
 
-            _issuePersonsInvolvedRepository.Insert(personInvolved);
-            _issueHistoryRepository.Insert(CreateIssueHistoryEntry(issue.Id, currentUserId.ToString(), null,
-                IssueChangeType.PersonInvolved, now, currentUserId));
+            if (_workContext.CurrentVendor != null)
+            {
+                var vendorAssignment = new IssueAssignment
+                {
+                    IssueId = issue.Id,
+                    ObjectId = _workContext.CurrentVendor.Id,
+                    AssignmentType = IssueAssignmentType.Vendor,
+                    CreatedBy = currentUserId,
+                    CreatedAt = now,
+                };
+                InsertAssignment(vendorAssignment);
+            }
         }
 
         public void UpdateIssue(Issue issue)
@@ -162,12 +207,26 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
         {
             if (!string.IsNullOrWhiteSpace(text) && text.Length >= _quickSearchTextFilterMinLength)
             {
-                var query = (from customer in _customerRepository.Table
+                var baseQuery = from customer in _customerRepository.Table
+                            select customer;
+
+                if (idsToExclude != null && idsToExclude.Any())
+                {
+                    baseQuery = baseQuery.Where(x => !idsToExclude.Contains(x.Id));
+                }
+
+                if (_workContext.CurrentVendor != null && !_permissionService.Authorize(StandardPermissionProvider.ManageCustomers))
+                {
+                    baseQuery = baseQuery.Where(x => x.VendorId == _workContext.CurrentVendor.Id);
+                }
+
+                var query = (from customer in baseQuery
                              from gaFirstName in _genericAttributeRepository.Table.Where(x => x.EntityId == customer.Id &&
                                   x.Key == NopCustomerDefaults.FirstNameAttribute && x.KeyGroup == nameof(Customer))
                              from gaLastName in _genericAttributeRepository.Table.Where(x => x.EntityId == customer.Id &&
                                   x.Key == NopCustomerDefaults.LastNameAttribute && x.KeyGroup == nameof(Customer))
-                             where gaFirstName.Value.Contains(text) || gaLastName.Value.Contains(text) || customer.Email.Contains(text)
+                             where gaFirstName.Value.Contains(text) || gaLastName.Value.Contains(text) || customer.Email.Contains(text) && !customer.Deleted
+                                   && customer.Active
                              select new
                              {
                                  CustomerId = customer.Id,
@@ -175,11 +234,6 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
                                  FirstName = gaFirstName.Value,
                                  LastName = gaLastName.Value,
                              });
-
-                if (idsToExclude != null && idsToExclude.Any())
-                {
-                    query = query.Where(x => !idsToExclude.Contains(x.CustomerId));
-                }
 
                 var queryResult = query.Take(_quickSearchTake).ToList();
 
@@ -286,6 +340,9 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
                 case IssueAssignmentType.Product:
                     name = GetProductName(objectId);
                     break;
+                case IssueAssignmentType.Vendor:
+                    name = GetVendorName(objectId);
+                    break;
                 default:
                     throw new NotImplementedException();
             }
@@ -297,6 +354,12 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
         {
             var product = _productService.GetProductById(productId);
             return product.Name;
+        }
+
+        private string GetVendorName(int vendorId)
+        {
+            var vendor = _vendorService.GetVendorById(vendorId);
+            return $"{vendor.Name} ({vendor.Email})";
         }
 
         public void DeleteAssignment(int id)
@@ -374,6 +437,9 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
                 case IssueAssignmentType.Product:
                     result = QuickSearchProductAssignments(text, idsToExclude);
                     break;
+                case IssueAssignmentType.Vendor:
+                    result = QuickSearchVendorAssignments(text, idsToExclude);
+                    break;
                 default:
                     throw new NotImplementedException();
             }
@@ -383,18 +449,62 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
 
         private List<QuickSearchAssignmentInfo> QuickSearchProductAssignments(string text, List<int> idsToExclude = null)
         {
-            var products = _productService.SearchProducts(pageSize: _quickSearchTake, keywords: text, searchSku: true);
-
-            var productsIds = products.Select(x => x.Id).Except(idsToExclude).ToList();
-            var filteredProducts = products.Where(x => productsIds.Contains(x.Id)).ToList();
-
-            var list = filteredProducts.Select(x => new QuickSearchAssignmentInfo
+            if (!string.IsNullOrWhiteSpace(text) && text.Length >= _quickSearchTextFilterMinLength)
             {
-                ObjectId = x.Id,
-                Name = x.Name,
-            }).ToList();
+                var vendorId = _workContext.CurrentVendor?.Id ?? 0;
+                var products = _productService.SearchProducts(pageSize: _quickSearchTake, keywords: text, searchSku: true, vendorId: vendorId);
 
-            return list;
+                var productsIds = products.Select(x => x.Id).Except(idsToExclude).ToList();
+                var filteredProducts = products.Where(x => productsIds.Contains(x.Id)).ToList();
+
+                var list = filteredProducts.Select(x => new QuickSearchAssignmentInfo
+                {
+                    ObjectId = x.Id,
+                    Name = x.Name,
+                }).ToList();
+
+                return list;
+            }
+
+            return new List<QuickSearchAssignmentInfo>();
+        }
+
+        private List<QuickSearchAssignmentInfo> QuickSearchVendorAssignments(string text, List<int> idsToExclude = null)
+        {
+            if (!string.IsNullOrWhiteSpace(text) && text.Length >= _quickSearchTextFilterMinLength)
+            {
+                var query = from vendor in _vendorRepository.Table
+                            where vendor.Name.Contains(text) || vendor.Email.Contains(text)
+                            select new
+                            {
+                                Id = vendor.Id,
+                                Name = vendor.Name,
+                                Email = vendor.Email,
+                            };
+
+                if (idsToExclude != null && idsToExclude.Any())
+                {
+                    query = query.Where(x => !idsToExclude.Contains(x.Id));
+                }
+
+                if (_workContext.CurrentVendor != null && !_permissionService.Authorize(StandardPermissionProvider.ManageVendors))
+                {
+                    var customerVendorId = _workContext.CurrentVendor.Id;
+                    query = query.Where(x => x.Id == customerVendorId);
+                }
+
+                var vendors = query.ToList();
+
+                var list = vendors.Select(x => new QuickSearchAssignmentInfo
+                {
+                    ObjectId = x.Id,
+                    Name = x.Name,
+                }).ToList();
+
+                return list;
+            }
+
+            return new List<QuickSearchAssignmentInfo>();
         }
 
         public IPagedList<IssueHistory> GetHistoryList(int issueId, int pageIndex = 0, int pageSize = int.MaxValue, bool getOnlyTotalCount = false)
@@ -453,6 +563,31 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
             var isAdmin = _customerService.IsInCustomerRole(_workContext.CurrentCustomer, NopCustomerDefaults.AdministratorsRoleName);
 
             return isAdmin || isPersonInvolved || isCreator;
+        }
+
+        public bool CanViewIssue(int issueId)
+        {
+            var isAdmin = _customerService.IsInCustomerRole(_workContext.CurrentCustomer, NopCustomerDefaults.AdministratorsRoleName);
+            if (isAdmin)
+            {
+                return true;
+            }
+
+            var customerId = _workContext.CurrentCustomer.Id;
+
+            var isPersonInvolved = _issuePersonsInvolvedRepository.Table.Any(x => x.IssueId == issueId && x.CustomerId == customerId);
+            if (isPersonInvolved)
+            {
+                return true;
+            }
+
+            var isCreator = _issueRepository.GetById(issueId).CreatedBy == customerId;
+            if (isCreator)
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

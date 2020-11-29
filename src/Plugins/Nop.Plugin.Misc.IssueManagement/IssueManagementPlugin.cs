@@ -116,6 +116,7 @@ namespace Nop.Plugin.Misc.IssueManagement
                 ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueStatus.InProgress"] = "In progress",
                 ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueStatus.Closed"] = "Closed",
                 ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueAssignmentType.Product"] = "Product",
+                ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueAssignmentType.Vendor"] = "Vendor",
                 ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueChangeType.Name"] = "Name",
                 ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueChangeType.Description"] = "Description",
                 ["Enums.Nop.Plugin.Misc.IssueManagement.Domain.IssueChangeType.Deadline"] = "Deadline",
