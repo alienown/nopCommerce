@@ -48,5 +48,9 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
         bool CanEditIssue(int issueId);
 
         bool CanViewIssue(int issueId);
+
+        Dictionary<IssueStatus, int> GetIssueCountPerStatus();
+
+        Dictionary<IssuePriority, int> GetIssueCountPerPriority();
     }
 }

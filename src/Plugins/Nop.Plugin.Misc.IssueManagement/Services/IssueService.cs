@@ -97,35 +97,47 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
                     query = query.Where(x => x.Deadline <= deadlineTo.Value);
                 }
 
-                //vendor customers can access issues if they are creators or they are in persons involved or if there is vendor assignment that customer is assigned to
                 if (_workContext.CurrentVendor != null)
                 {
-                    var customerId = _workContext.CurrentCustomer.Id;
-                    var vendorId = _workContext.CurrentVendor.Id;
-
-                    var inPersonsInvolvedQuery = from personInvolved in _issuePersonsInvolvedRepository.Table
-                                                 where personInvolved.CustomerId == customerId
-                                                 select personInvolved.IssueId;
-
-                    var issuesIdsWithVendorOfCustomerQuery = from assignment in _issueAssignmentRepository.Table
-                                                             where assignment.ObjectId == vendorId && assignment.AssignmentType == IssueAssignmentType.Vendor
-                                                             select assignment.IssueId;
-
-                    var issuesCreatedByCustomer = from issue in _issueRepository.Table
-                                                  where issue.CreatedBy == customerId
-                                                  select issue.Id;
-
-                    var issuesIds = inPersonsInvolvedQuery.Union(issuesIdsWithVendorOfCustomerQuery).Union(issuesCreatedByCustomer);
-
-                    query = from issue in query
-                            from issueId in issuesIds.Where(x => x == issue.Id)
-                            select issue;
+                    query = RestrictIssuesForVendorCustomer(query);
                 }
 
                 return query;
             }, pageIndex, pageSize, getOnlyTotalCount);
 
             return list;
+        }
+
+        /// <summary>
+        /// Used for limiting query to issues that vendor customer (vendor manager) can see.
+        /// Vendor customers can access issues if they are creators or they are in persons involved or if there is vendor assignment that customer is assigned to.
+        /// </summary>
+        /// <param name="query">Query to limit</param>
+        /// <returns>Query limited to issues that vendor customer can see</returns>
+        private IQueryable<Issue> RestrictIssuesForVendorCustomer(IQueryable<Issue> query)
+        {
+            var customerId = _workContext.CurrentCustomer.Id;
+            var vendorId = _workContext.CurrentVendor.Id;
+
+            var inPersonsInvolvedQuery = from personInvolved in _issuePersonsInvolvedRepository.Table
+                                         where personInvolved.CustomerId == customerId
+                                         select personInvolved.IssueId;
+
+            var issuesIdsWithVendorOfCustomerQuery = from assignment in _issueAssignmentRepository.Table
+                                                     where assignment.ObjectId == vendorId && assignment.AssignmentType == IssueAssignmentType.Vendor
+                                                     select assignment.IssueId;
+
+            var issuesCreatedByCustomer = from issue in _issueRepository.Table
+                                          where issue.CreatedBy == customerId
+                                          select issue.Id;
+
+            var issuesIds = inPersonsInvolvedQuery.Union(issuesIdsWithVendorOfCustomerQuery).Union(issuesCreatedByCustomer);
+
+            query = from issue in query
+                    from issueId in issuesIds.Where(x => x == issue.Id)
+                    select issue;
+
+            return query;
         }
 
         public void InsertIssue(Issue issue)
@@ -588,6 +600,64 @@ namespace Nop.Plugin.Misc.IssueManagement.Services
             }
 
             return false;
+        }
+
+        public Dictionary<IssueStatus, int> GetIssueCountPerStatus()
+        {
+            var query = _issueRepository.Table;
+
+            if (_workContext.CurrentVendor != null)
+            {
+                query = RestrictIssuesForVendorCustomer(query);
+            }
+
+            var result = query.GroupBy(x => x.Status)
+                .Select(x => new
+                {
+                    Status = x.Key,
+                    IssuesCount = x.Count(),
+                }).ToDictionary(x => x.Status, y => y.IssuesCount);
+
+            foreach (IssueStatus status in Enum.GetValues(typeof(IssueStatus)))
+            {
+                if (!result.ContainsKey(status))
+                {
+                    result.Add(status, 0);
+                }
+            }
+
+            result = result.OrderBy(x => x.Key).ToDictionary(x => x.Key, y => y.Value);
+
+            return result;
+        }
+
+        public Dictionary<IssuePriority, int> GetIssueCountPerPriority()
+        {
+            var query = _issueRepository.Table;
+
+            if (_workContext.CurrentVendor != null)
+            {
+                query = RestrictIssuesForVendorCustomer(query);
+            }
+
+            var result = query.GroupBy(x => x.Priority)
+                .Select(x => new
+                {
+                    Status = x.Key,
+                    IssuesCount = x.Count(),
+                }).ToDictionary(x => x.Status, y => y.IssuesCount);
+
+            foreach (IssuePriority status in Enum.GetValues(typeof(IssuePriority)))
+            {
+                if (!result.ContainsKey(status))
+                {
+                    result.Add(status, 0);
+                }
+            }
+
+            result = result.OrderBy(x => x.Key).ToDictionary(x => x.Key, y => y.Value);
+
+            return result;
         }
     }
 }

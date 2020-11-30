@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Linq;
+using Microsoft.AspNetCore.Mvc;
 using Nop.Plugin.Misc.IssueManagement.Domain;
 using Nop.Plugin.Misc.IssueManagement.Factories;
 using Nop.Plugin.Misc.IssueManagement.Models;
@@ -220,6 +221,32 @@ namespace Nop.Plugin.Misc.IssueManagement.Controllers
         {
             var model = _issueModelFactory.PrepareIssueCommentListModel(searchModel);
             return Json(model);
+        }
+
+        public IActionResult LoadIssueCountPerStatusStatistics()
+        {
+            var stats = _issueService.GetIssueCountPerStatus();
+
+            var result = stats.Select(x => new
+            {
+                Status = _localizationService.GetLocalizedEnum(x.Key),
+                IssueCount = x.Value,
+            }).ToDictionary(x => x.Status, y => y.IssueCount);
+
+            return Json(result);
+        }
+
+        public IActionResult LoadIssueCountPerPriorityStatistics()
+        {
+            var stats = _issueService.GetIssueCountPerPriority();
+
+            var result = stats.Select(x => new
+            {
+                Status = _localizationService.GetLocalizedEnum(x.Key),
+                IssueCount = x.Value,
+            }).ToDictionary(x => x.Status, y => y.IssueCount);
+
+            return Json(result);
         }
     }
 }

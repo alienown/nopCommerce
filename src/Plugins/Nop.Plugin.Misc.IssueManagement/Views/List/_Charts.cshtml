@@ -1,0 +1,58 @@
+﻿@using Nop.Core
+
+@{
+    const string hideIssueCountPerStatusChartAttributeName = "Plugins.Misc.IssueManagement.List.ChartsPanel.IssueCountPerStatusChartPanel";
+    var hideIssueCountPerStatusChartPanel = genericAttributeService.GetAttribute<bool>(workContext.CurrentCustomer, hideIssueCountPerStatusChartAttributeName);
+
+    const string hideIssueCountPerPriorityChartAttributeName = "Plugins.Misc.IssueManagement.List.ChartsPanel.IssueCountPerPriorityChartPanel";
+    var hideIssueCountPerPriorityChartPanel = genericAttributeService.GetAttribute<bool>(workContext.CurrentCustomer, hideIssueCountPerPriorityChartAttributeName);
+}
+
+<div id="issueCountPerStatusBox" class="box box-info @if (hideIssueCountPerStatusChartPanel){<text>collapsed-box</text>}">
+    <div class="box-header with-border">
+        <h2 class="box-title" style="font-size: 15px;">
+            @T("Plugins.Misc.IssueManagement.List.ChartsPanel.IssueCountPerStatusChartPanel.Title")
+        </h2>
+        <div class="box-tools pull-right">
+            <button class="btn btn-box-tool margin-l-10" data-widget="collapse">
+                @if (hideIssueCountPerStatusChartPanel)
+                {
+                    <text><i class="fa fa-plus"></i></text>
+                }
+                else
+                {
+                    <text><i class="fa fa-minus"></i></text>
+                }
+            </button>
+        </div>
+    </div>
+    <div class="box-body">
+        <div class="chart" style="height: 300px;">
+            <canvas id="issueCountPerStatusChart" height="300"></canvas>
+        </div>
+    </div>
+</div>
+<div id="issueCountPerPriorityBox" class="box box-info @if (hideIssueCountPerPriorityChartPanel){<text>collapsed-box</text>}">
+    <div class="box-header with-border">
+        <h2 class="box-title" style="font-size: 15px;">
+            @T("Plugins.Misc.IssueManagement.List.ChartsPanel.IssueCountPerPriorityChartPanel.Title")
+        </h2>
+        <div class="box-tools pull-right">
+            <button class="btn btn-box-tool margin-l-10" data-widget="collapse">
+                @if (hideIssueCountPerPriorityChartPanel)
+                {
+                    <text><i class="fa fa-plus"></i></text>
+                }
+                else
+                {
+                    <text><i class="fa fa-minus"></i></text>
+                }
+            </button>
+        </div>
+    </div>
+    <div class="box-body">
+        <div class="chart" style="height: 300px;">
+            <canvas id="issueCountPerPriorityChart" height="300"></canvas>
+        </div>
+    </div>
+</div>

@@ -7,6 +7,7 @@
     Layout = "_AdminLayout";
     ViewBag.PageTitle = T("Plugins.Misc.IssueManagement.List.Title").Text;
     Html.SetActiveMenuItemSystemName("All issues");
+    Html.AppendScriptParts("~/lib_npm/chart.js/Chart.min.js");
     Html.AddCssFileParts(ResourceLocation.Head, "~/Plugins/Misc.IssueManagement/Content/index.css");
     Html.AddCssFileParts(ResourceLocation.Head, "~/Plugins/Misc.IssueManagement/Content/List/index.css");
 }
@@ -14,6 +15,12 @@
 @{
     const string hideFiltersBlockAttributeName = "Plugins.Misc.IssueManagement.List.FiltersPanel";
     var hideFiltersBlock = genericAttributeService.GetAttribute<bool>(workContext.CurrentCustomer, hideFiltersBlockAttributeName);
+
+    const string hideChartsBlockAttributeName = "Plugins.Misc.IssueManagement.List.ChartsPanel";
+    var hideChartsBlock = genericAttributeService.GetAttribute<bool>(workContext.CurrentCustomer, hideChartsBlockAttributeName);
+
+    const string hideIssueCountPerStatusChartAttributeName = "Plugins.Misc.IssueManagement.List.ChartsPanel.IssueCountPerStatusChartPanel";
+    const string hideIssueCountPerPriorityChartAttributeName = "Plugins.Misc.IssueManagement.List.ChartsPanel.IssueCountPerPriorityChartPanel";
 }
 
 <form asp-controller="Issue" asp-action="IssueList" method="post">
@@ -31,6 +38,14 @@
     <div class="content">
         <div class="form-horizontal">
             <div class="panel-group">
+                <nop-panel asp-name="chartsPanel"
+                           asp-icon="fa fa-bar-chart"
+                           asp-title="@T("Plugins.Misc.IssueManagement.List.ChartsPanel.Title")"
+                           asp-hide-block-attribute-name="@hideChartsBlockAttributeName"
+                           asp-hide="@hideChartsBlock"
+                           asp-advanced="false">
+                    @await Html.PartialAsync("~/Plugins/Misc.IssueManagement/Views/List/_Charts.cshtml")
+                </nop-panel>
                 <div class="panel panel-default panel-search">
                     <div class="panel-body">
                         <div class="row search-row @(!hideFiltersBlock ? "opened" : "")" data-hideAttribute="@hideFiltersBlockAttributeName">
@@ -171,7 +186,210 @@
         return self;
     }();
 
+    var chartsScope = function () {
+        var self = {}
+
+        var isIssueCountPerStatusChartLoaded = false;
+        var isIssueCountPerPriorityChartLoaded = false;
+
+        var issueCountPerStatusChart;
+        var issueCountPerPriorityChart;
+
+        function createIssueCountPerStatusChart() {
+            issueCountPerStatusChart = new Chart(document.getElementById('issueCountPerStatusChart'), {
+                type: 'bar',
+                data: {
+                    datasets: [{
+                        barPercentage: 0.5,
+                        barThickness: 6,
+                        maxBarThickness: 8,
+                        minBarLength: 2,
+                        backgroundColor: [
+                            'rgba(160, 160, 160, 1)',
+                            'rgba(0, 192, 239, 1)',
+                            'rgba(0, 166, 90, 1)',
+                        ],
+                    }],
+                },
+                options: {
+                    legend: {
+                        display: false
+                    },
+                    scales: {
+                        xAxes: [{
+                            gridLines: {
+                                offsetGridLines: true,
+                            },
+                        }],
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true,
+                                stepSize: 1,
+                            }
+                        }],
+                    },
+                },
+            });
+        }
+
+        function createIssueCountPerPriorityChart() {
+            issueCountPerPriorityChart = new Chart(document.getElementById('issueCountPerPriorityChart'), {
+                type: 'bar',
+                data: {
+                    datasets: [{
+                        barPercentage: 0.5,
+                        barThickness: 6,
+                        maxBarThickness: 8,
+                        minBarLength: 2,
+                        backgroundColor: [
+                            'rgba(160, 160, 160, 1)',
+                            'rgba(0, 192, 239, 1)',
+                            'rgba(243, 156, 18, 1)',
+                            'rgba(240, 128, 128, 1)',
+                            'rgba(221, 75, 57, 1)',
+                        ],
+                    }],
+                },
+                options: {
+                    legend: {
+                        display: false
+                    },
+                    scales: {
+                        xAxes: [{
+                            gridLines: {
+                                offsetGridLines: true,
+                            },
+                        }],
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true,
+                                stepSize: 1,
+                            }
+                        }],
+                    },
+                },
+            });
+        }
+
+        function loadIssueCountPerStatusStatistics() {
+            isIssueCountPerStatusChartLoaded = true;
+
+            var csLabels = [];
+            var csData = [];
+
+            $.ajax({
+                cache: false,
+                type: "GET",
+                url: "@Url.Action("LoadIssueCountPerStatusStatistics", "Issue")",
+                success: function (data) {
+                    for (var group in data) {
+                        csLabels.push(group);
+                        csData.push(data[group]);
+                    }
+
+                    if (!issueCountPerStatusChart) {
+                        createIssueCountPerStatusChart();
+                    }
+
+                    issueCountPerStatusChart.config.data.labels = csLabels;
+                    issueCountPerStatusChart.config.data.datasets[0].data = csData;
+                    issueCountPerStatusChart.update();
+                },
+            });
+        }
+
+        function loadIssueCountPerPriorityStatistics() {
+            isIssueCountPerPriorityChartLoaded = true;
+
+            var csLabels = [];
+            var csData = [];
+
+            $.ajax({
+                cache: false,
+                type: "GET",
+                url: "@Url.Action("LoadIssueCountPerPriorityStatistics", "Issue")",
+                success: function (data) {
+                    for (var group in data) {
+                        csLabels.push(group);
+                        csData.push(data[group]);
+                    }
+
+                    if (!issueCountPerPriorityChart) {
+                        createIssueCountPerPriorityChart();
+                    }
+
+                    issueCountPerPriorityChart.config.data.labels = csLabels;
+                    issueCountPerPriorityChart.config.data.datasets[0].data = csData;
+                    issueCountPerPriorityChart.update();
+                },
+            });
+        }
+
+        function loadIssueCountPerStatusIfNotCollapsed() {
+            var isIssueCountPerStatusCollapsed = $('#issueCountPerStatusBox').hasClass('collapsed-box');
+            if (!isIssueCountPerStatusCollapsed) {
+                loadIssueCountPerStatusStatistics();
+            }
+        }
+
+        function loadIssueCountPerPriorityIfNotCollapsed() {
+            var isIssueCountPerPriorityCollapsed = $('#issueCountPerPriorityBox').hasClass('collapsed-box');
+            if (!isIssueCountPerPriorityCollapsed) {
+                loadIssueCountPerPriorityStatistics();
+            }
+        }
+
+        function loadStatisticsIfNotCollapsed() {
+            var isChartsPanelCollapsed = '@hideChartsBlock' === 'True';
+            if (!isChartsPanelCollapsed) {
+                loadIssueCountPerStatusIfNotCollapsed();
+                loadIssueCountPerPriorityIfNotCollapsed();
+            }
+        }
+
+        function bindEvents() {
+            $('#chartsPanel .panel-heading').on('click', function (e) {
+                var collapsed = !e.currentTarget.classList.contains('opened');
+                if (!collapsed) {
+                    if (!isIssueCountPerStatusChartLoaded) {
+                        loadIssueCountPerStatusIfNotCollapsed();
+                    }
+
+                    if (!isIssueCountPerPriorityChartLoaded) {
+                        loadIssueCountPerPriorityIfNotCollapsed();
+                    }
+                }
+            });
+
+            $('#issueCountPerStatusBox').on('click', 'button[data-widget="collapse"]', function () {
+                var collapsed = !$('#issueCountPerStatusBox').hasClass('collapsed-box');
+                saveUserPreferences('@(Url.Action("SavePreference", "Preferences"))', '@hideIssueCountPerStatusChartAttributeName', collapsed);
+
+                if (!collapsed && !isIssueCountPerStatusChartLoaded) {
+                    loadIssueCountPerStatusStatistics();
+                }
+            });
+
+            $('#issueCountPerPriorityBox').on('click', 'button[data-widget="collapse"]', function () {
+                var collapsed = !$('#issueCountPerPriorityBox').hasClass('collapsed-box');
+                saveUserPreferences('@(Url.Action("SavePreference", "Preferences"))', '@hideIssueCountPerPriorityChartAttributeName', collapsed);
+
+                if (!collapsed && !isIssueCountPerPriorityChartLoaded) {
+                    loadIssueCountPerPriorityStatistics();
+                }
+            });
+        }
+
+        self.initialize = function () {
+            bindEvents();
+            loadStatisticsIfNotCollapsed();
+        }
+
+        return self;
+    }();
+
     $(document).ready(function () {
         filtersScope.initialize();
+        chartsScope.initialize();
     });
 </script>
